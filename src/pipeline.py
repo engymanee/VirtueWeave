@@ -62,14 +62,13 @@ class Request:
 class Pick:
     virtue: str
     score: float
-    fit: float
     title: str
     why: str                 # the catalog's own "how it fits" text
     activity: str
     activity_minutes: int
     over_time: bool          # True if the activity is longer than the teacher's time
     reasons: List[str]
-    evidence: List[Dict[str, str]]    # {"source", "label", "text"}
+    evidence: List[str]      # other catalog passages that matched the teacher's note
 
 
 @dataclass
@@ -148,21 +147,18 @@ def rank(request: Request, catalog: Catalog, matches: Dict, k: int = TOP_K) -> L
         else:
             reasons.append(f"activity takes {act.minutes} min, within your {request.minutes} min")
 
-        evidence = [
-            {"source": "why", "label": f"{pair.title} (why)", "text": pair.why},
-            {"source": "activity", "label": f"{pair.title} ({request.band} activity)", "text": act.text},
-            {"source": "guide", "label": f"{virtue.title()} guide", "text": catalog.virtues[virtue].guide},
-        ]
-        seen = {e["text"] for e in evidence}
+        # The pair's own why, its activity and the virtue guide reach the explainer
+        # separately, so the evidence is only what else in the catalog matched the note.
+        evidence = []
         if match is not None:
             for hit in match.evidence:
                 p = hit.passage
                 relevant = p.topic in (None, request.topic) and p.band in (None, request.band)
-                if relevant and p.text not in seen:
-                    seen.add(p.text)
-                    evidence.append({"source": p.source, "label": p.label, "text": p.text})
+                if (relevant and p.source != "guide" and p.text not in (pair.why, act.text)
+                        and p.text not in evidence):
+                    evidence.append(p.text)
         candidates.append(Pick(
-            virtue, score, pair.fit, pair.title, pair.why, act.text, act.minutes,
+            virtue, score, pair.title, pair.why, act.text, act.minutes,
             over, reasons, evidence))
 
     order = list(catalog.virtues)

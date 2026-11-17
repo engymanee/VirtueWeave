@@ -9,7 +9,7 @@ def result_with(virtues, catalog, case):
     picks = []
     for v in virtues:
         act = catalog.activity(case.topic, v, band)
-        picks.append(Pick(v, 1.0, 1.0, "t", "w", act.text, act.minutes,
+        picks.append(Pick(v, 1.0, "t", "w", act.text, act.minutes,
                           act.minutes > int(case.minutes), [], []))
     return RunResult(ok=True, picks=picks)
 

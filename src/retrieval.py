@@ -24,7 +24,6 @@ class Passage:
     source: str                    # "guide", "why" or "activity"
     virtue: str
     text: str
-    label: str                     # e.g. "Fix the Recipe (why)"
     topic: Optional[str] = None
     band: Optional[str] = None
 
@@ -49,17 +48,15 @@ class VirtueMatch:
 def passages_from_catalog(catalog: Catalog) -> List[Passage]:
     """Every virtue guide, every why and every activity in the catalog."""
     passages = [
-        Passage("guide", v.name, v.guide, f"{v.name.title()} guide")
+        Passage("guide", v.name, v.guide)
         for v in catalog.virtues.values()
     ]
     passages += [
-        Passage("why", p.virtue, p.why, f"{p.title} (why)", topic=p.topic)
+        Passage("why", p.virtue, p.why, topic=p.topic)
         for p in catalog.pairs.values()
     ]
     passages += [
-        Passage("activity", a.virtue, a.text,
-                f"{catalog.pairs[(a.topic, a.virtue)].title} ({a.band} activity)",
-                topic=a.topic, band=a.band)
+        Passage("activity", a.virtue, a.text, topic=a.topic, band=a.band)
         for a in catalog.activities.values()
     ]
     return passages

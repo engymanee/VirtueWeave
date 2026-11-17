@@ -123,7 +123,7 @@ def build_input(request: Any, picks: List[Any], guides: Dict[str, str]) -> Dict:
             "how_it_fits": p.why,
             "activity": {"title": p.title, "minutes": p.activity_minutes, "text": p.activity},
             "reasons": p.reasons,
-            "retrieved_passages": [e["text"] for e in p.evidence if e["source"] != "guide"][:4],
+            "retrieved_passages": p.evidence[:4],
         } for p in picks],
     }
 

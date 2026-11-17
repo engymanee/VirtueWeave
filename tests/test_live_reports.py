@@ -3,11 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.agent_demo import render_markdown as agent_markdown, run_demo
+from src.agent_demo import run_demo
 from src.compare_specialization import measure, render_markdown, run_comparison
 from src.docs_section import replace_section
 from src.llm import LLMUnavailable
-from test_agent import GOOD, Script, reply, use
+from helpers import GOOD, Script
 
 
 def test_replace_section_is_idempotent_and_leaves_the_rest_alone(tmp_path):
@@ -47,7 +47,7 @@ def test_agent_demo_writes_nothing_if_the_agent_cannot_run(data_dir, tmp_path):
         run_demo(DEMO, tool_call=down, out_dir=str(tmp_path / "traces"), doc_path=str(doc),
                  data_dir=data_dir, trace_dir=str(tmp_path / "t"))
     assert not doc.exists()
-    assert not list((tmp_path / "traces").glob("*.json"))
+    assert not (tmp_path / "traces").exists()        # no folder is created either
 
 
 # ------------------------------------------------------------ specialization

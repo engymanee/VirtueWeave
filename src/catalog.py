@@ -13,7 +13,7 @@ virtues for any topic.
 import csv
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 BANDS = ["K-2", "3-5", "6-8", "9-12"]
 GRADES = ["K"] + [str(n) for n in range(1, 13)]

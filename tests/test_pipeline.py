@@ -100,9 +100,11 @@ def test_always_three_distinct_virtues(data_dir, tmp_path):
         assert len({p.virtue for p in result.picks}) == 3
 
 
-def test_evidence_lists_why_activity_and_guide(data_dir, tmp_path):
-    result = run(data_dir, tmp_path, model_call=fake_model())
-    assert [e["source"] for e in result.picks[0].evidence][:3] == ["why", "activity", "guide"]
+def test_evidence_is_only_what_else_matched_the_note(data_dir, tmp_path):
+    assert all(p.evidence == [] for p in run(data_dir, tmp_path, model_call=fake_model()).picks)
+    result = run(data_dir, tmp_path, minutes=30, note="fair turns, it feels unfair", model_call=fake_model())
+    for pick in result.picks:
+        assert all(isinstance(e, str) and e not in (pick.why, pick.activity) for e in pick.evidence)
 
 
 def test_rank_ties_keep_the_catalog_order(data_dir):

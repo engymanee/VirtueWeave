@@ -40,7 +40,6 @@ def run_demo(
     """Runs the agent for each request. Returns the saved runs."""
     extra = {} if tool_call is None else {"tool_call": tool_call}
     folder = Path(out_dir)
-    folder.mkdir(parents=True, exist_ok=True)
     saved = []
     for number, req in enumerate(requests, start=1):
         result = run_pipeline(req["topic"], req["grade"], req["minutes"], req["note"],
@@ -52,6 +51,7 @@ def run_demo(
         trace = json.load(open(result.trace_path, encoding="utf-8"))
         agent_step = next(s for s in trace["steps"] if s["step"] == "agent")
         slug = re.sub(r"[^a-z0-9]+", "-", req["topic"].lower()).strip("-")
+        folder.mkdir(parents=True, exist_ok=True)
         file = folder / f"agent-{number}-{slug}.json"
         record = {"request": req, **{k: agent_step[k] for k in
                   ("steps", "reasoning", "scorer_top3", "agent_top3", "overlap")}}

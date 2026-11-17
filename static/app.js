@@ -15,7 +15,6 @@ const sendBtn = $("#send");
 const resultsSection = $("#results");
 const resultsBody = $("#results-body");
 let busy = false;
-let meanings = {};
 
 const cap = (text) => text[0].toUpperCase() + text.slice(1);
 const gradeName = (g) => (g === "K" ? "Kindergarten" : `Grade ${g}`);
@@ -42,7 +41,6 @@ async function fillForm() {
     const res = await fetch("/api/catalog");
     if (!res.ok) throw new Error("catalog " + res.status);
     const catalog = await res.json();
-    meanings = catalog.virtues;
     $("#topic").append(...catalog.topics.map((t) => h("option", { value: t, text: cap(t) })));
     $("#grade").append(...catalog.grades.map((g) => h("option", { value: g, text: gradeName(g) })));
     $("#topic").value = "loops";
