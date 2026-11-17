@@ -146,6 +146,9 @@ def rank(
             score += earned
             if match.method == "tfidf":
                 detail = f"retrieval {match.score:.2f} for {p['virtue']} (text match)"
+            elif match.method == "tfidf+cue-tags":
+                detail = (f"retrieval {match.score:.2f} for {p['virtue']} (text match and "
+                          f"cue tags: {', '.join(match.cue_hits)})")
             else:
                 tags = ", ".join(match.cue_hits) or "none"
                 detail = f"cue tags for {p['virtue']}: {tags} ({match.score:.2f})"

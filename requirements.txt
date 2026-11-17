@@ -1,5 +1,7 @@
 pandas
 pytest
-streamlit
 scikit-learn
 anthropic
+fastapi
+uvicorn
+httpx

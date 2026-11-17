@@ -68,7 +68,7 @@ def test_cue_tags_are_collected_per_virtue(files):
 def test_matching_description_scores_its_virtue_highest(retriever):
     matches = retriever.match_virtues("the children need an equal share and a turn each")
     assert matches["justice"].score > matches["perseverance"].score
-    assert matches["justice"].method == "tfidf"
+    assert matches["justice"].method.startswith("tfidf")
 
 
 def test_scores_are_between_zero_and_one(retriever):
@@ -115,7 +115,7 @@ def test_empty_description_scores_zero_everywhere(retriever):
 
 def test_text_match_wins_over_cue_tags_when_both_exist(retriever):
     matches = retriever.match_virtues("everyone is stuck and needs an equal share")
-    assert all(m.method == "tfidf" for m in matches.values())
+    assert all(m.method.startswith("tfidf") for m in matches.values())
 
 
 def test_empty_index_is_an_error():
@@ -129,3 +129,30 @@ def test_format_evidence_names_source_and_text():
     match = VirtueMatch("justice", 0.5, "tfidf", [Hit(passage, 0.5)], [])
     line = format_evidence(match)
     assert "[guide: Justice basics]" in line and "Fairness matters." in line
+
+
+def test_stemmer_joins_word_forms():
+    from src.retrieval import stem
+    assert stem("teasing") == stem("tease") == stem("teases") == stem("teased")
+    assert stem("blame") == stem("blaming")
+    assert stem("running") == stem("run")
+    assert stem("is") == "is" and stem("go") == "go"          # short words are left alone
+
+
+def test_text_search_matches_other_forms_of_a_word(retriever):
+    hits = retriever.search("they are sharing")   # the note says "share"
+    assert hits and hits[0].passage.virtue == "justice"
+
+
+def test_cue_tag_adds_a_bonus_on_top_of_text_matches(retriever):
+    from src.retrieval import CUE_BONUS
+    plain = retriever.match_virtues("an equal chance each")["justice"]
+    tagged = retriever.match_virtues("an equal chance each, it feels unfair")["justice"]
+    assert tagged.cue_hits == ["unfair"] and tagged.method == "tfidf+cue-tags"
+    assert tagged.score == pytest.approx(min(1.0, plain.score + CUE_BONUS), abs=0.05)
+    assert tagged.score > plain.score
+
+
+def test_tag_forms_match_the_description(retriever):
+    # tag is "giving-up"; the teacher writes "gives up"
+    assert retriever.match_virtues("he gives up quickly")["perseverance"].cue_hits == ["giving-up"]

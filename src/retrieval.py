@@ -18,7 +18,7 @@ import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
 
@@ -44,7 +44,7 @@ class VirtueMatch:
     """Retrieval result for one virtue."""
     virtue: str
     score: float                   # 0 to 1
-    method: str                    # "tfidf" or "cue-tags"
+    method: str                    # "tfidf", "tfidf+cue-tags" or "cue-tags"
     evidence: List[Hit]            # best passages first (empty for cue-tags)
     cue_hits: List[str]            # cue tags found in the description
 
@@ -100,9 +100,38 @@ def load_cue_tags(practices_path: str) -> Dict[str, List[str]]:
     return tags
 
 
+# Added to a virtue's text-match score when any of its cue tags appears in the
+# description. Tags are specific words ("blaming", "teasing"), so one is enough.
+CUE_BONUS = 0.3
+
+_SUFFIXES = ("ing", "ed", "es", "s", "ly")
+
+
+def stem(word: str) -> str:
+    """
+    A tiny stemmer so "tease", "teasing" and "teases" meet at "teas", and
+    "blame" meets "blaming". It only needs to be consistent, not correct.
+    """
+    for suffix in _SUFFIXES:
+        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
+            word = word[: -len(suffix)]
+            break
+    if word.endswith("e") and len(word) > 3:
+        word = word[:-1]
+    if len(word) > 3 and word[-1] == word[-2] and word[-1] not in "lsz":
+        word = word[:-1]            # running -> runn -> run
+    return word
+
+
+def _tokens(text: str) -> List[str]:
+    return [stem(w) for w in re.findall(r"[a-z0-9']+", text.lower())
+            if w not in ENGLISH_STOP_WORDS]
+
+
 def _words(text: str) -> str:
-    """Lowercases and turns punctuation into spaces so "laughing-at" == "laughing at"."""
-    return " " + " ".join(re.findall(r"[a-z0-9']+", text.lower())) + " "
+    """Stemmed words joined by spaces, so "laughing-at" matches "laughs at"."""
+    stems = [stem(w) for w in re.findall(r"[a-z0-9']+", text.lower())]
+    return " " + " ".join(stems) + " "
 
 
 class VirtueRetriever:
@@ -119,7 +148,8 @@ class VirtueRetriever:
         self.cue_tags = cue_tags or {}
         self.virtues = sorted({p.virtue for p in passages} | set(self.cue_tags))
         self._vectorizer = TfidfVectorizer(
-            stop_words="english", ngram_range=(1, 2), sublinear_tf=True
+            tokenizer=_tokens, token_pattern=None, lowercase=False,
+            ngram_range=(1, 2), sublinear_tf=True,
         )
         self._matrix = self._vectorizer.fit_transform(p.text for p in passages)
 
@@ -161,10 +191,11 @@ class VirtueRetriever:
         """
         Gives every virtue a retrieval score and its evidence passages.
 
-        The score is the best passage similarity for that virtue. If no passage
-        matches at all (for example the description uses none of the indexed
-        words), the score falls back to the share of the virtue's cue tags
-        found in the description.
+        When the text search finds something, a virtue's score is its best
+        passage similarity plus CUE_BONUS if any of its cue tags is found in the
+        description, capped at 1. If no
+        passage matches at all, the score is the share of the virtue's cue
+        tags found in the description.
         """
         hits = self.search(description, top_n=len(self.passages))
         cues = self.cue_matches(description)
@@ -175,8 +206,10 @@ class VirtueRetriever:
             mine = [h for h in hits if h.passage.virtue == virtue]
             tags = self.cue_tags.get(virtue, [])
             if use_text:
-                score = mine[0].score if mine else 0.0
-                method = "tfidf"
+                text_score = mine[0].score if mine else 0.0
+                bonus = CUE_BONUS if cues[virtue] else 0.0
+                score = min(1.0, text_score + bonus)
+                method = "tfidf+cue-tags" if cues[virtue] else "tfidf"
             else:
                 score = len(cues[virtue]) / len(tags) if tags else 0.0
                 method = "cue-tags"
