@@ -1,19 +1,25 @@
 flowchart TD
-    A[Teacher describes a situation] --> B{Input guardrail}
-    B -- blocked --> X[Stop with a message]
-    B -- ok --> C[Interpret: model builds a profile]
-    C --> D{Profile valid?}
-    D -- no --> E[Keyword fallback profile]
-    D -- yes --> F[Retrieve candidates]
-    E --> F
-    N[(Practice notes)] --> F
-    G[(Virtue guides)] --> F
-    F --> H[Rank with scorer and reasons]
-    P[(practices.csv)] --> H
-    H --> I[Explain: model words the reasons]
-    I --> J{Output guardrail}
-    J -- fail --> K[Show scorer reasons only]
-    J -- pass --> L[Top 3 with reasons and sources]
-    K --> L
-    L --> M[Teacher accepts or rejects]
-    L --> T[(Trace log)]
+    A["Teacher chooses a topic, a grade (K-12) and minutes<br/>and may add a note about the class"] --> B{"Input guardrail<br/>topic is one of 12, grade K-12,<br/>minutes 1-180, safe note"}
+    B -- blocked --> X["Stop with a clear message"]
+    B -- ok --> C{"Is there a note?"}
+
+    C -- yes --> R["Retrieve: TF-IDF over virtue guides,<br/>why-it-fits notes and activities<br/>plus a bonus for cue tags"]
+    C -- no --> K["Score the 8 virtues<br/>for the topic"]
+    R --> K
+
+    G[("virtues.csv<br/>8 guides and cue tags")] --> R
+    W[("virtue_fit.csv<br/>96 topic x virtue pairs:<br/>fit and why it fits")] --> R
+    W --> K
+    AC[("activities.csv<br/>384 activities, one per<br/>grade band: K-2, 3-5, 6-8, 9-12")] --> R
+    AC --> K
+
+    K --> T3["Pick the top 3 virtues<br/>score = fit + note match<br/>activities that fit the time come first,<br/>longer ones are flagged"]
+    T3 --> E["Explain: the model writes 2-3 sentences<br/>per virtue on how it fits the topic"]
+    E -- model unavailable --> H["Use the catalog's why-it-fits text"]
+    E --> F{"Output guardrail<br/>right virtues, 2-3 sentences,<br/>short, no links"}
+    F -- fail --> H
+    F -- pass --> I["Three virtue cards<br/>Why it fits<br/>How to bring it in"]
+    H --> I
+    I --> J["Teacher accepts or rejects each virtue"]
+    J --> FB[("feedback.jsonl")]
+    I --> TR[("Trace log: one JSON file per run")]

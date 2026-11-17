@@ -1,0 +1,385 @@
+topic,virtue,band,minutes,activity
+algorithms,service,K-2,15,"Children write the steps for a task, such as washing hands, so a younger child can follow them."
+algorithms,service,3-5,15,"Students write clear steps for a school task, such as using the library, for a new student, then test them on a classmate."
+algorithms,service,6-8,20,Teams write and test a step-by-step guide to a school routine for new students and revise it from feedback.
+algorithms,service,9-12,30,"Students design an algorithm for a real community task, such as a food-drive schedule, and test it with the people who will use it."
+algorithms,compassion,K-2,15,Children put picture cards of a kind act in order and act them out.
+algorithms,compassion,3-5,15,Students write steps for helping a classmate who is upset and discuss which steps depend on how the person feels.
+algorithms,compassion,6-8,20,Students write a decision procedure for responding to a hurtful message online and test it on realistic scenarios.
+algorithms,compassion,9-12,30,Students draft a step-by-step support protocol for a peer in distress and critique where rigid steps fail real people.
+algorithms,gratitude,K-2,10,Children draw three steps of their morning with the helper at each step.
+algorithms,gratitude,3-5,10,Students list the steps of their morning routine and name the person who made each step possible.
+algorithms,gratitude,6-8,20,"Students trace the steps behind an everyday item, such as lunch, and write thanks to people they had not noticed."
+algorithms,gratitude,9-12,30,Students map the algorithm behind a service they rely on and identify the people whose work keeps it running.
+algorithms,justice,K-2,10,"Children write steps for sharing out crayons so each child gets the same, then check the steps with a partner."
+algorithms,justice,3-5,15,Students write rules for dividing limited supplies and test whether the steps treat every group the same.
+algorithms,justice,6-8,20,Students write an algorithm to assign classroom jobs fairly and test it for hidden bias against some students.
+algorithms,justice,9-12,30,Students write a scheduling algorithm for shared resources and audit it for who benefits and who is left out.
+algorithms,perseverance,K-2,10,"Children follow a drawn recipe for making a paper hat, find a missing step and add it."
+algorithms,perseverance,3-5,15,"Students test a classmate's instructions, find where they break and revise them over several rounds."
+algorithms,perseverance,6-8,20,"Teams write an algorithm, test it on tricky cases and log each failed attempt and the fix it led to."
+algorithms,perseverance,9-12,30,Students refine an algorithm over repeated test cycles and reflect on what each failure revealed.
+algorithms,curiosity,K-2,10,"Children find two different sets of steps for the same job, such as lining up, and compare which is quicker."
+algorithms,curiosity,3-5,15,Students find three different algorithms for the same task and predict which will take the fewest steps.
+algorithms,curiosity,6-8,20,Students compare two ways to sort a set of cards and ask why one is faster as the set grows.
+algorithms,curiosity,9-12,30,Students investigate how the number of steps grows for two algorithms and explain the pattern they find.
+algorithms,teamwork,K-2,10,"Pairs write the steps for building a block tower, then swap and build from each other's steps."
+algorithms,teamwork,3-5,15,"Groups split a long task into steps, each member writes one part and the group joins them."
+algorithms,teamwork,6-8,20,"Teams agree on an exact step format, write one algorithm together and test it on another team."
+algorithms,teamwork,9-12,30,Teams specify an algorithm with clear inputs and outputs so another team can implement it without questions.
+algorithms,honesty,K-2,10,Children follow a partner's steps exactly and say honestly where the steps did not work.
+algorithms,honesty,3-5,10,Students follow a classmate's steps exactly as written and report truthfully where they failed.
+algorithms,honesty,6-8,20,Students run a peer's algorithm on test cases and record every failure without softening it.
+algorithms,honesty,9-12,30,"Students write an honest evaluation of their own algorithm, listing the cases where it breaks."
+sequencing,service,K-2,10,Children put picture cards of the steps for helping a friend who dropped their things in order and act them out.
+sequencing,service,3-5,15,"Students order the steps of a task that helps a younger class, such as a read-aloud, and run it."
+sequencing,service,6-8,20,"Students sequence a helpful event, such as a tutoring session for younger students, and run it."
+sequencing,service,9-12,30,"Students plan the ordered steps of a service project, test the plan and adjust after trying it."
+sequencing,compassion,K-2,10,"Children order picture cards showing noticing, asking and helping a sad friend, then explain why each comes where it does."
+sequencing,compassion,3-5,15,Students sequence the steps for including a left-out classmate and role-play the order.
+sequencing,compassion,6-8,20,Students order the steps of supporting a friend through a hard day and discuss when the order should change.
+sequencing,compassion,9-12,30,Students sequence a response plan for a peer in difficulty and examine how listening first changes the outcome.
+sequencing,gratitude,K-2,10,"Children arrange cards for noticing a kindness, saying thank you and showing it, then act out the sequence."
+sequencing,gratitude,3-5,10,Students order the steps of a good thank-you note and write one to someone who helped them.
+sequencing,gratitude,6-8,20,Students sequence the people behind a school event in time order and thank the one least noticed.
+sequencing,gratitude,9-12,30,Students map the ordered chain of work behind a service and write recognition to someone in the chain.
+sequencing,justice,K-2,10,Pairs build a ScratchJr program by adding one block each in turn.
+sequencing,justice,3-5,15,Students program a turn-taking sequence for a shared device and check every child gets the same number of turns.
+sequencing,justice,6-8,20,Students sequence a fair queue for lab equipment and test it with edge cases such as late arrivals.
+sequencing,justice,9-12,30,"Students design an ordering rule for a shared resource, then test for who gets served last under different conditions."
+sequencing,perseverance,K-2,10,"Children run a mixed-up sequence, swap one block and run it again until it works."
+sequencing,perseverance,3-5,15,Students debug a scrambled sequence one swap at a time and keep a tally of attempts.
+sequencing,perseverance,6-8,20,Students reorder a broken program step by step and write what each failed order taught them.
+sequencing,perseverance,9-12,30,"Students trace a faulty execution order, form a fix hypothesis, test it and iterate until it passes."
+sequencing,curiosity,K-2,10,"Children swap two blocks in a program and predict, then check, what changes."
+sequencing,curiosity,3-5,15,"Students predict what happens when two steps in a sequence are swapped, then run both versions."
+sequencing,curiosity,6-8,20,Students systematically reorder steps in a program and record which orders still work and why.
+sequencing,curiosity,9-12,30,Students test which steps in a process are order-dependent and explain the rule they discover.
+sequencing,teamwork,K-2,10,"One child gives instructions in order and the other follows them exactly, then they swap."
+sequencing,teamwork,3-5,15,"Pairs give and follow exact ordered instructions to draw a picture, then swap roles."
+sequencing,teamwork,6-8,20,Teams write an ordered set of instructions together and test them by having another team follow them blind.
+sequencing,teamwork,9-12,30,Teams plan an execution order for a shared project and agree who owns each step and handoff.
+sequencing,honesty,K-2,10,"Children tell the true order of what happened at snack time using picture cards, even if the order is not flattering."
+sequencing,honesty,3-5,10,"Students record the actual order of steps in a game they just played, including mistakes."
+sequencing,honesty,6-8,20,"Students write an honest log of the order in which they actually built a program, not the tidy order."
+sequencing,honesty,9-12,30,"Students reconstruct the true timeline of their project, including wrong turns, and compare it with their final write-up."
+loops,service,K-2,10,"Children program a character to repeat a helpful action, such as handing out cards, and count how many it helped."
+loops,service,3-5,15,"Students program a repeating helper character that completes a task for others, like delivering items."
+loops,service,6-8,20,Students build a loop-driven tool that helps younger students practise a skill.
+loops,service,9-12,30,Students write a program that automates a repetitive task for a community group and ask users what is missing.
+loops,compassion,K-2,10,Children program a character to repeat a kind word and decide when it should stop.
+loops,compassion,3-5,15,Students program a character to repeat caring actions and decide how it knows when to stop.
+loops,compassion,6-8,20,Students build a loop that checks in on a character repeatedly and changes its words based on a mood value.
+loops,compassion,9-12,30,Students write a program that repeats supportive messages and discuss when repeating feels caring versus careless.
+loops,gratitude,K-2,5,Children name a thank-you they say every day and program a character to say it in a loop.
+loops,gratitude,3-5,10,Students program a thank-you message to repeat and choose who each repeat is for.
+loops,gratitude,6-8,20,Students use a loop to create a thank-you card for each person who helps in a school day.
+loops,gratitude,9-12,30,Students write a loop that generates personalised recognition for every member of a group and reflect on sincerity.
+loops,justice,K-2,10,Children use a loop to give every character in a row one turn and check no one is skipped.
+loops,justice,3-5,15,Students use a loop so every character in a list gets exactly one turn and test for skipped ones.
+loops,justice,6-8,20,Students write a loop that rotates turns among players and check for off-by-one errors that cheat someone.
+loops,justice,9-12,30,Students write a rotation loop for shared resources and test it for fairness when the number of users changes.
+loops,perseverance,K-2,15,"Children use a Repeat block to move a character a little each time until it arrives, and tell the story of not giving up."
+loops,perseverance,3-5,15,Students use a loop to repeat a small move until a character reaches a goal and describe trying again.
+loops,perseverance,6-8,20,Students build a loop that retries an action until it succeeds and discuss when retrying stops being useful.
+loops,perseverance,9-12,30,Students write a retry loop with a limit and reflect on persistence versus recognising when to change approach.
+loops,curiosity,K-2,10,"Children change the repeat number on a loop, predict the result and test it."
+loops,curiosity,3-5,15,Students vary a loop's count and speed and predict the pattern before running it.
+loops,curiosity,6-8,20,Students explore nested loops by changing numbers and predicting the shape drawn.
+loops,curiosity,9-12,30,Students investigate how nested loops multiply work and test their predictions with timing.
+loops,teamwork,K-2,10,"Pairs invent a three-move dance, perform it as a loop, then program it with a Repeat block."
+loops,teamwork,3-5,15,"Pairs invent a repeating dance, program it with a loop and perform it in step."
+loops,teamwork,6-8,20,Teams build a loop-based animation where each member owns a repeating part that must stay in time.
+loops,teamwork,9-12,30,Teams build a program where loops from different members run together and must be synchronised.
+loops,honesty,K-2,10,"Children predict how many times a loop will run, run it and honestly say whether they were right."
+loops,honesty,3-5,10,"Students predict how many times a loop runs, run it and report whether they were right."
+loops,honesty,6-8,20,"Students trace a loop by hand, compare with the real output and report any difference."
+loops,honesty,9-12,30,"Students document what a loop really does, including off-by-one results, rather than what they intended."
+events,service,K-2,15,Children program a character so that when it is tapped it goes to help another character.
+events,service,3-5,15,Students program a character that responds to a tap by helping another character.
+events,service,6-8,20,"Students build an event-driven helper, such as a reminder button, for a classmate or younger student."
+events,service,9-12,30,Students build an app that responds to user events to help a real person with a task and gather their feedback.
+events,compassion,K-2,15,"Children program what a character does when it is bumped, such as saying sorry."
+events,compassion,3-5,15,"Students program how a character responds when bumped or sad, choosing a kind response."
+events,compassion,6-8,20,"Students build a program where the response changes with a mood event, such as comforting a sad character."
+events,compassion,9-12,30,Students design event responses for an app that supports a user having a hard moment and test them with peers.
+events,gratitude,K-2,10,Children program a character to say thank you when tapped and use it to thank a helper.
+events,gratitude,3-5,15,Students build a thank-you button for a person who helped them and show it to them.
+events,gratitude,6-8,20,Students make an event-driven thank-you card that responds to each tap with a different thanks.
+events,gratitude,9-12,30,Students build an interactive recognition page for a person or group and gather their reaction.
+events,justice,K-2,10,Children test that tapping any character gives the same response and discuss why that is fair.
+events,justice,3-5,15,Students test that every character responds equally to taps and fix any that are left out.
+events,justice,6-8,20,Students check that every user event gets handled and no input is ignored.
+events,justice,9-12,30,"Students audit an interface for events some users cannot trigger, such as without a mouse, and fix one."
+events,perseverance,K-2,10,Children fix a tap event that does not work by changing one thing at a time until it does.
+events,perseverance,3-5,15,"Students debug an event that does not fire, changing one thing at a time and recording tries."
+events,perseverance,6-8,20,"Students track down why an event handler never runs, logging each theory and test."
+events,perseverance,9-12,30,Students debug an event-ordering bug over several attempts and describe what each failed attempt ruled out.
+events,curiosity,K-2,5,"Children guess what starts a program with a new start block, then try it and see."
+events,curiosity,3-5,15,"Students try different start events, such as tap or shake, and predict what each will do."
+events,curiosity,6-8,20,Students explore how many different events can trigger one action and test their guesses.
+events,curiosity,9-12,30,"Students investigate event handling, such as the order events fire in, and test their hypotheses."
+events,teamwork,K-2,10,Pairs program two characters so that when one is tapped the other responds.
+events,teamwork,3-5,15,Groups connect their characters so one event starts another's action in a chain.
+events,teamwork,6-8,20,"Teams build a chain of messages between their programs, each member owning one link."
+events,teamwork,9-12,30,"Teams design a messaging contract between components, each team owning a part, and test the whole."
+events,honesty,K-2,10,Children tap each character and say honestly which ones did not respond.
+events,honesty,3-5,10,Students test every event in their program and report which ones do not work.
+events,honesty,6-8,20,Students write an honest test report on which events work and which fail.
+events,honesty,9-12,30,Students write an event test log that lists failures plainly before presenting the project.
+conditionals,service,K-2,10,"Children play an if-then game, choosing a helpful action for each need card."
+conditionals,service,3-5,15,Students build an if-then program that offers help when a character is stuck.
+conditionals,service,6-8,20,Students program a helper that checks conditions and acts when someone needs support.
+conditionals,service,9-12,30,Students design a rule-based tool for a real community need and test its rules with the people it serves.
+conditionals,compassion,K-2,10,"Children play an if-then game, choosing a kind action for each feeling card."
+conditionals,compassion,3-5,15,Students match if-then cards to feelings and choose the kind response.
+conditionals,compassion,6-8,20,Students program a character that picks a kind response based on a feeling value.
+conditionals,compassion,9-12,30,Students build a response chooser and discuss where simple if-then rules fail to capture how someone really feels.
+conditionals,gratitude,K-2,10,"Children complete if-then cards such as if someone helps me then I say thank you, and act them out."
+conditionals,gratitude,3-5,15,Students program a character that says thank you if it was helped.
+conditionals,gratitude,6-8,20,Students build a program that chooses a fitting thank-you based on what help was given.
+conditionals,gratitude,9-12,30,Students write a rule-based appreciation tool and discuss the difference between automatic and sincere thanks.
+conditionals,justice,K-2,10,Children act out if-then cards about sharing and check the rule works for every child.
+conditionals,justice,3-5,15,Students write if-then rules for sharing and test whether each rule treats every child the same.
+conditionals,justice,6-8,20,Students write conditional rules for access to a resource and test for cases where they are unfair.
+conditionals,justice,9-12,30,Students analyse a decision rule for hidden bias in its conditions and rewrite it.
+conditionals,perseverance,K-2,10,Children write an if-then rule for what to do if a block does not work and try it.
+conditionals,perseverance,3-5,15,Students program a character that tries a second way if the first does not work.
+conditionals,perseverance,6-8,20,Students write a fallback chain of conditions that tries several approaches before giving up.
+conditionals,perseverance,9-12,30,Students build a program with retry and fallback logic and reflect on knowing when to change approach.
+conditionals,curiosity,K-2,10,Children change the if part of a program and predict which branch will run.
+conditionals,curiosity,3-5,15,Students change one condition at a time and predict which branch runs.
+conditionals,curiosity,6-8,20,Students explore combined conditions with and and or by predicting and testing outcomes.
+conditionals,curiosity,9-12,30,Students systematically test boundary values for conditions and explain surprises.
+conditionals,teamwork,K-2,10,"Pairs write an if-then rule for what they will do when they disagree, then try it."
+conditionals,teamwork,3-5,15,Groups write an if-then plan for what happens when members disagree and test it in role-play.
+conditionals,teamwork,6-8,20,Teams write decision rules for dividing work and test them on tricky scenarios.
+conditionals,teamwork,9-12,30,Teams define explicit decision rules for conflicts in their project and revisit them after a real disagreement.
+conditionals,honesty,K-2,5,Children practise answering if-then questions truthfully about their own work.
+conditionals,honesty,3-5,10,Students write an if-then rule for owning up to a mistake and practise it truthfully.
+conditionals,honesty,6-8,20,Students write conditions that report errors plainly instead of hiding them.
+conditionals,honesty,9-12,30,Students build error handling that reports problems truthfully and discuss the pull to hide failures.
+variables,service,K-2,10,Children keep a tally of the helpful things the class does in a day and watch it grow.
+variables,service,3-5,15,Students build a counter that tracks help given to others in class.
+variables,service,6-8,20,"Students build a tracker for a class service project, such as items collected."
+variables,service,9-12,30,Students build a tracker for a real community drive and report its results to the organisers.
+variables,compassion,K-2,10,"Children use a feelings meter that changes how a character responds, and choose kind responses."
+variables,compassion,3-5,15,Students program a mood variable that changes a character's reply and choose caring replies.
+variables,compassion,6-8,20,Students build a mood tracker that adjusts its messages and discuss what it cannot know.
+variables,compassion,9-12,30,Students design a check-in tool using stored feelings and debate privacy and care.
+variables,gratitude,K-2,10,Children keep a counter of thank-yous they give in a day and share it.
+variables,gratitude,3-5,10,Students keep a variable counting thank-yous they give during a day.
+variables,gratitude,6-8,20,Students track the kind acts they notice and reflect on what the count shows.
+variables,gratitude,9-12,30,Students build a gratitude log in code and look at patterns in what they notice.
+variables,justice,K-2,5,A card on the table records how many turns each child has had with the tablet.
+variables,justice,3-5,15,Students use a variable to track whose turn it is and check turns stay equal.
+variables,justice,6-8,20,Students use variables to keep score fairly and find where a rule favours one player.
+variables,justice,9-12,30,Students model resource sharing with variables and test whether the allocation stays fair as inputs change.
+variables,perseverance,K-2,10,Children count their tries at a puzzle with a variable and celebrate the total.
+variables,perseverance,3-5,15,Students track their number of attempts with a variable while solving a puzzle.
+variables,perseverance,6-8,20,Students store each attempt's result and chart progress over time.
+variables,perseverance,9-12,30,Students log and graph their debugging attempts and reflect on what the trend shows about persistence.
+variables,curiosity,K-2,10,"Children guess, change the number on a block and run the program to see."
+variables,curiosity,3-5,15,Students change the value stored in a variable and predict what the program will do.
+variables,curiosity,6-8,20,Students experiment with several variables together and record which combinations change the output.
+variables,curiosity,9-12,30,Students investigate how variable scope and updates change results and test their predictions.
+variables,teamwork,K-2,10,Children add to a shared score variable so every child's effort counts toward one total.
+variables,teamwork,3-5,15,Groups share one score variable that every member's work increases.
+variables,teamwork,6-8,20,Teams build a program with shared variables that each member updates safely.
+variables,teamwork,9-12,30,Teams design shared state for a project and agree on rules for who may change it.
+variables,honesty,K-2,5,"Children record a game score exactly as it is, even when they are behind."
+variables,honesty,3-5,10,"Students record a game score in a variable exactly as it is, even when they are behind."
+variables,honesty,6-8,20,Students log real values in their program rather than hard-coding good-looking ones.
+variables,honesty,9-12,30,Students discuss data integrity and check their program reports real values rather than convenient ones.
+debugging,service,K-2,10,"Children help a partner find a bug by asking questions, without touching their tablet."
+debugging,service,3-5,15,"Students help a partner debug by asking questions, without touching their keyboard."
+debugging,service,6-8,20,Students run a peer help desk for debugging problems in younger classes.
+debugging,service,9-12,30,Students volunteer as debugging mentors for younger students and reflect on how to help without taking over.
+debugging,compassion,K-2,5,"When a partner's program fails, children say one encouraging thing before suggesting a fix."
+debugging,compassion,3-5,15,Students say one encouraging thing before suggesting a fix to a partner's bug.
+debugging,compassion,6-8,20,"Students practise giving kind, specific feedback on a classmate's broken program."
+debugging,compassion,9-12,30,"Students run a code review that is honest and kind, and reflect on how feedback lands."
+debugging,gratitude,K-2,10,Children thank a partner who spotted a bug and say what they learned from it.
+debugging,gratitude,3-5,10,Students thank a partner for finding a bug and say what it taught them.
+debugging,gratitude,6-8,20,Students write thanks to a classmate whose feedback improved their program.
+debugging,gratitude,9-12,30,Students write acknowledgements for the people who helped find and fix bugs in their project.
+debugging,justice,K-2,10,Children discuss where a bug really came from and agree that bugs are nobody's fault.
+debugging,justice,3-5,15,Students discuss where a bug came from and agree not to blame the person.
+debugging,justice,6-8,20,Students trace a bug to its real cause and discuss fair ways to talk about mistakes.
+debugging,justice,9-12,30,Students analyse a famous software failure for its causes and discuss fair accountability.
+debugging,perseverance,K-2,10,"Children find the block that does not work, change it and run again, counting their tries with pride."
+debugging,perseverance,3-5,15,Students keep a bug diary of each fix attempt until the program works.
+debugging,perseverance,6-8,20,"Students debug a stubborn program, logging each theory and what ruled it out."
+debugging,perseverance,9-12,30,Students tackle a hard bug with a documented hypothesis-and-test cycle and reflect on staying with the problem.
+debugging,curiosity,K-2,10,Children act as bug detectives and say what they think is wrong before testing.
+debugging,curiosity,3-5,15,"Students act as bug detectives, guess the cause, then test the guess."
+debugging,curiosity,6-8,20,"Students design experiments to isolate a bug, changing one thing at a time."
+debugging,curiosity,9-12,30,"Students use systematic isolation and logging to explain why a bug happens, not just fix it."
+debugging,teamwork,K-2,10,"Pairs hunt for a bug together, one reading the steps aloud and the other pointing."
+debugging,teamwork,3-5,15,"Pairs find a bug together, one reading the code aloud and one pointing."
+debugging,teamwork,6-8,20,Teams practise rubber-duck debugging by explaining their code line by line to a partner.
+debugging,teamwork,9-12,30,Teams run paired debugging sessions with set roles and reflect on what each role caught.
+debugging,honesty,K-2,5,In a closing circle children finish the sentence 'My bug was... and I fixed it by...'.
+debugging,honesty,3-5,10,Students finish the sentence My bug was... and I fixed it by... to a partner.
+debugging,honesty,6-8,20,"Students write a plain bug report about their own mistake, with no excuses."
+debugging,honesty,9-12,30,"Students write a candid post-mortem of a bug they caused, covering cause, impact and fix."
+testing,service,K-2,10,Children test a classmate's game the way a younger child would play it and report what they notice.
+testing,service,3-5,15,Students test a game as a younger child would and report how to make it easier.
+testing,service,6-8,20,Students user-test a program with a younger class and write what they learned.
+testing,service,9-12,30,Students user-test a tool with the people it is meant for and revise it from their feedback.
+testing,compassion,K-2,10,"Children tell a partner one thing that works and one thing to fix, in kind words."
+testing,compassion,3-5,15,"Students give a partner one thing that works and one thing to fix, in kind words."
+testing,compassion,6-8,20,"Students practise written feedback that is specific, honest and kind."
+testing,compassion,9-12,30,Students run structured feedback sessions and reflect on how wording changes how feedback is received.
+testing,gratitude,K-2,10,Children thank their testers and say what each one helped them improve.
+testing,gratitude,3-5,10,Students thank a tester and say what the test helped them improve.
+testing,gratitude,6-8,20,Students write thanks to their testers that name what each one found.
+testing,gratitude,9-12,30,Students credit testers in their project documentation and describe what their feedback changed.
+testing,justice,K-2,10,"Children test whether their game works for different players, such as a new player."
+testing,justice,3-5,15,Students test whether their game works for different kinds of players.
+testing,justice,6-8,20,Students test with varied inputs and users and fix a case that works for some but not others.
+testing,justice,9-12,30,"Students audit a program for users it fails, such as unusual inputs or accessibility needs, and fix one."
+testing,perseverance,K-2,5,"After a fix, children run the program three more times to be sure it still works."
+testing,perseverance,3-5,15,After a fix students run the program three more times to be sure it still works.
+testing,perseverance,6-8,20,Students keep testing after the first pass works and log the problems each round reveals.
+testing,perseverance,9-12,30,Students iterate through test-and-fix cycles and reflect on why one passing test is rarely enough.
+testing,curiosity,K-2,10,"Children run a program, ask 'what if', change one block and test their idea."
+testing,curiosity,3-5,15,"Students run a program, ask what if, change one block and test their idea."
+testing,curiosity,6-8,20,Students design extra test cases to find where a program breaks and why.
+testing,curiosity,9-12,30,Students use edge cases to explore the limits of a program and explain what they discover.
+testing,teamwork,K-2,10,"Partners swap programs, test each other's work and share what they found."
+testing,teamwork,3-5,15,"Partners swap programs, test each other's work and share findings."
+testing,teamwork,6-8,20,Teams run a testing round where each member tests another's part and reports back.
+testing,teamwork,9-12,30,Teams set up shared test suites and agree on when a part is ready to merge.
+testing,honesty,K-2,10,"Children predict what a program will do, run it and report truthfully whether they were right."
+testing,honesty,3-5,10,"Students predict what a program will do, run it and report truthfully whether they were right."
+testing,honesty,6-8,20,Students write test cases and report every failure without softening it.
+testing,honesty,9-12,30,"Students write an honest test report for their own program, including known failures."
+decomposition,service,K-2,10,Children split tidying the classroom into three small jobs and do one each.
+decomposition,service,3-5,15,Students split a helping job for the class into parts and do it together.
+decomposition,service,6-8,20,Students plan a service project by dividing it into tasks and carrying it out.
+decomposition,service,9-12,30,"Students decompose a community service project into work packages, assign them and deliver one."
+decomposition,compassion,K-2,10,"Children break the feeling of a sad character into parts, such as what happened and what would help."
+decomposition,compassion,3-5,15,Students break a story character's problem into parts and think about what would help each.
+decomposition,compassion,6-8,20,Students analyse a conflict by splitting it into parts and what each person needs.
+decomposition,compassion,9-12,30,"Students decompose a human problem, such as loneliness at school, into causes and design a response for one."
+decomposition,gratitude,K-2,10,Children list the parts of a school day and thank the person behind one of them.
+decomposition,gratitude,3-5,10,Students list the parts of a school day and thank the person behind one of them.
+decomposition,gratitude,6-8,20,Students break an event into the roles behind it and thank people in roles they overlooked.
+decomposition,gratitude,9-12,30,Students decompose a service into the people and tasks behind it and write recognition to one of them.
+decomposition,justice,K-2,10,Children split a project into parts and agree how to share the jobs fairly.
+decomposition,justice,3-5,15,Students split a project into parts and negotiate a fair way to share the jobs.
+decomposition,justice,6-8,20,Students divide project work and review whether the split is fair across the team.
+decomposition,justice,9-12,30,Students plan work division for a team project and audit it for fairness of load and credit.
+decomposition,perseverance,K-2,10,Children split a project into three parts on paper and tick each one off as it is built.
+decomposition,perseverance,3-5,15,Students split a project into smaller parts and tick each one off as it is built.
+decomposition,perseverance,6-8,20,"Students break a long project into milestones and track progress, adjusting when a part takes longer."
+decomposition,perseverance,9-12,30,"Students decompose a large project, plan milestones and reflect on how small steps made a hard task manageable."
+decomposition,curiosity,K-2,10,Children take a simple toy or picture apart in words and list what it is made of.
+decomposition,curiosity,3-5,15,Students take a device or system apart in words and diagrams to see what it is made of.
+decomposition,curiosity,6-8,20,Students decompose a familiar app into its parts and guess how each works.
+decomposition,curiosity,9-12,30,"Students decompose a complex system, form questions about each part and research one."
+decomposition,teamwork,K-2,15,"Pairs divide a project so each child builds one part, then join the parts together."
+decomposition,teamwork,3-5,15,"Pairs divide a project so each builds one part, then join the parts."
+decomposition,teamwork,6-8,20,Teams assign parts of a project and define how the parts connect.
+decomposition,teamwork,9-12,30,"Teams design a modular project with defined interfaces, each member owning a module."
+decomposition,honesty,K-2,10,Children tick off the parts they finished and say which are not done yet.
+decomposition,honesty,3-5,10,Students tick off finished parts and say which parts are not done.
+decomposition,honesty,6-8,20,"Students report project status honestly, including parts that are behind."
+decomposition,honesty,9-12,30,"Students write an honest progress report listing complete, partial and missing parts."
+patterns,service,K-2,10,Children notice which classroom job is often forgotten and offer to take it on.
+patterns,service,3-5,15,Students look for a pattern in classroom needs and plan a way to help.
+patterns,service,6-8,20,"Students collect data on a school problem, look for the pattern and propose a helping action."
+patterns,service,9-12,30,Students analyse community data to find where help is needed most and present it to the people who can act.
+patterns,compassion,K-2,10,"Children notice when a classmate seems sad, look for what is the same each time and think how to help."
+patterns,compassion,3-5,15,Students notice patterns in when classmates feel left out and plan a way to include them.
+patterns,compassion,6-8,20,Students observe patterns in how conflict starts and design a kind response.
+patterns,compassion,9-12,30,Students analyse patterns in survey data on belonging at school and propose a response.
+patterns,gratitude,K-2,10,Children track the helpers they see in a day and look for who they usually miss.
+patterns,gratitude,3-5,10,Students track who helps them in a day and look for people they usually miss.
+patterns,gratitude,6-8,20,Students look for patterns in the support they receive and thank someone they overlooked.
+patterns,gratitude,9-12,30,Students analyse the patterns in who supports their work and write thanks to someone they had overlooked.
+patterns,justice,K-2,15,"Children sort objects by a rule, find one that does not fit and change the rule."
+patterns,justice,3-5,15,"Students sort objects by a rule, find one that does not fit and change the rule."
+patterns,justice,6-8,20,Students look for patterns in a rule that treats some objects or people unequally.
+patterns,justice,9-12,30,Students analyse a data set for patterns that show unequal treatment and propose a fix.
+patterns,perseverance,K-2,10,"Children keep guessing a hidden pattern, noting each wrong guess and trying again."
+patterns,perseverance,3-5,15,"Students keep guessing a hidden pattern, noting each wrong guess and trying again."
+patterns,perseverance,6-8,20,Students test several pattern rules on a data set and log which fail and why.
+patterns,perseverance,9-12,30,Students iterate on a model of a pattern through repeated tests and reflect on what each wrong model taught them.
+patterns,curiosity,K-2,10,Children guess a hidden sorting rule and test the guess with new objects.
+patterns,curiosity,3-5,15,Students guess a hidden sorting rule and test the guess with new objects.
+patterns,curiosity,6-8,20,Students look for patterns in a data set and test whether the pattern holds for new data.
+patterns,curiosity,9-12,30,Students find and test patterns in real data and explain what could cause them.
+patterns,teamwork,K-2,10,Pairs take turns guessing and testing a pattern in a row of shapes.
+patterns,teamwork,3-5,15,Pairs take turns proposing and testing a pattern rule.
+patterns,teamwork,6-8,20,"Teams split a data set, find patterns separately and compare to find the best rule."
+patterns,teamwork,9-12,30,"Teams divide an analysis, share findings and decide together which pattern the evidence supports."
+patterns,honesty,K-2,5,Children describe an object's features exactly before deciding where it goes.
+patterns,honesty,3-5,10,Students describe an object's features exactly before deciding where it goes.
+patterns,honesty,6-8,20,"Students report the pattern they actually see in data, not the one they hoped for."
+patterns,honesty,9-12,30,Students present data patterns including the ones that contradict their hypothesis.
+pair programming,service,K-2,10,Helpers point and ask questions but keep their hands off the partner's tablet.
+pair programming,service,3-5,15,Helpers ask questions and point but keep their hands off their partner's device.
+pair programming,service,6-8,20,"Students mentor a younger pair, guiding by questions rather than taking over."
+pair programming,service,9-12,30,Students coach newer pair programmers and reflect on helping without doing it for them.
+pair programming,compassion,K-2,10,Partners notice when the other is frustrated and say one kind thing before going on.
+pair programming,compassion,3-5,15,Partners notice when the other is frustrated and say something encouraging.
+pair programming,compassion,6-8,20,Pairs agree on kind ways to say when they are stuck or frustrated.
+pair programming,compassion,9-12,30,Pairs discuss how stress shows up while coding together and practise supportive responses.
+pair programming,gratitude,K-2,5,Partners finish by thanking each other for one thing they did well.
+pair programming,gratitude,3-5,10,Partners end by thanking each other for one specific thing.
+pair programming,gratitude,6-8,20,Students write a short specific thank-you to a pair partner.
+pair programming,gratitude,9-12,30,Students give each partner specific appreciation for their contributions at the end of a project.
+pair programming,justice,K-2,5,Pairs use a timer so each child has the same time in control.
+pair programming,justice,3-5,15,Pairs use a timer so each student has equal time in control.
+pair programming,justice,6-8,20,Pairs track time and contributions to check the work is shared evenly.
+pair programming,justice,9-12,30,Pairs review how decisions were made and whether both voices shaped the result.
+pair programming,perseverance,K-2,10,Partners who get stuck each suggest one new idea and try them in turn.
+pair programming,perseverance,3-5,15,Stuck pairs each suggest an idea and try them in turn.
+pair programming,perseverance,6-8,20,Pairs keep a log of ideas tried when stuck and what each showed.
+pair programming,perseverance,9-12,30,"Pairs work through a hard problem, logging attempts, and reflect on how partnership helped them keep going."
+pair programming,curiosity,K-2,10,Partners ask each other why they chose a block and listen to the answer.
+pair programming,curiosity,3-5,15,Partners ask each other why they chose a block and listen.
+pair programming,curiosity,6-8,20,Pairs explain their reasoning aloud and ask each other what if questions.
+pair programming,curiosity,9-12,30,Pairs challenge each other's design choices with genuine questions and compare approaches.
+pair programming,teamwork,K-2,15,"One child handles the tablet while the other directs, and they swap every five minutes."
+pair programming,teamwork,3-5,15,"One student drives and one navigates, and they swap every five minutes."
+pair programming,teamwork,6-8,20,Pairs practise driver and navigator roles and reflect on what made the pair work.
+pair programming,teamwork,9-12,30,"Pairs use structured pair programming and reflect on communication, handoffs and shared ownership."
+pair programming,honesty,K-2,10,Partners say kindly when an idea is not working and offer another.
+pair programming,honesty,3-5,15,Partners say kindly when an idea is not working and offer another.
+pair programming,honesty,6-8,20,"Pairs practise giving direct, kind feedback on each other's code."
+pair programming,honesty,9-12,30,Pairs discuss what was hard about being candid with each other and set norms for honest feedback.
+sharing a project,service,K-2,20,Each child chooses a real person to make a project for and shows it to them.
+sharing a project,service,3-5,20,Students choose a real person to make a project for and show it to them.
+sharing a project,service,6-8,30,"Students make a project for a real audience, such as a younger class, and gather their reaction."
+sharing a project,service,9-12,45,Students design and deliver a project for a real community client and reflect on its usefulness.
+sharing a project,compassion,K-2,10,Each child tells a partner one kind and true thing about their project.
+sharing a project,compassion,3-5,10,Each student tells a partner one kind and true thing about their project.
+sharing a project,compassion,6-8,20,Students give a classmate feedback on their project that begins with what works.
+sharing a project,compassion,9-12,30,"Students hold a showcase critique with kind, specific, honest feedback norms."
+sharing a project,gratitude,K-2,10,Children end a project with a page or recording that thanks those who helped them.
+sharing a project,gratitude,3-5,10,Students end a project with a page or recording thanking those who helped.
+sharing a project,gratitude,6-8,20,Students add a thank-you credits slide to a project and share it with those named.
+sharing a project,gratitude,9-12,30,"Students write acknowledgements for their project, naming specific contributions of each helper."
+sharing a project,justice,K-2,10,Children agree how to give every child a fair turn to show their project.
+sharing a project,justice,3-5,15,Students agree on rules so every project gets equal time and attention at the showcase.
+sharing a project,justice,6-8,20,Students plan a showcase that gives every project fair visibility.
+sharing a project,justice,9-12,30,Students design showcase criteria and discuss whether they treat all projects fairly.
+sharing a project,perseverance,K-2,10,Children show their project and tell one thing that was hard and how they kept going.
+sharing a project,perseverance,3-5,15,Students show their project and describe one hard moment and how they kept going.
+sharing a project,perseverance,6-8,20,"Students present a project's version history, showing failures and fixes along the way."
+sharing a project,perseverance,9-12,30,"Students present the full development story, including failed attempts, and reflect on persistence."
+sharing a project,curiosity,K-2,10,Children ask a classmate one real question about how their project was made.
+sharing a project,curiosity,3-5,15,Students ask a classmate genuine questions about how their project was made.
+sharing a project,curiosity,6-8,20,Students run a gallery walk where visitors ask the maker how and why questions.
+sharing a project,curiosity,9-12,30,Students practise asking open questions about each other's projects and answering them in depth.
+sharing a project,teamwork,K-2,10,Groups plan together how each member will show their part of a shared project.
+sharing a project,teamwork,3-5,15,Groups plan how each member will present their part of a shared project.
+sharing a project,teamwork,6-8,20,Teams rehearse a joint presentation with each member explaining their own part.
+sharing a project,teamwork,9-12,30,"Teams present a shared project, each explaining their module and how it fits the whole."
+sharing a project,honesty,K-2,10,Children say which part of their project they made and where someone helped.
+sharing a project,honesty,3-5,15,Students say which part of their project they made and where someone helped.
+sharing a project,honesty,6-8,20,Students credit sources and helpers and describe their own contribution accurately.
+sharing a project,honesty,9-12,30,Students write a contribution statement and discuss honest credit for work done with help.

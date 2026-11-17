@@ -1,0 +1,97 @@
+topic,virtue,fit,title,why
+algorithms,service,1.0,Steps to Help,People write step-by-step instructions so that someone else can do a task.
+algorithms,compassion,0.8,Steps for a Kind Act,A good set of steps starts from thinking about the person who will follow it.
+algorithms,gratitude,0.6,Who Helped My Morning?,A daily routine written as steps shows how many people help at each one.
+algorithms,justice,0.5,Fair Steps for Everyone,"A fair algorithm gives every person the same steps, so writing one for sharing out materials makes fairness something you can check."
+algorithms,perseverance,0.5,Fix the Recipe,"Algorithms rarely work the first time, so testing a set of steps and revising them shows that trying again is part of the process."
+algorithms,curiosity,0.6,Whose Steps Are Better?,Asking whether there is a shorter way to do the same job is where algorithm thinking begins.
+algorithms,teamwork,0.6,Write It Together,"A shared set of steps only works if everyone agrees on what each step means, which takes talking and listening."
+algorithms,honesty,0.4,Follow It Exactly,"To test an algorithm you must follow the steps exactly as written and report what really happened, even if it fails."
+sequencing,service,0.5,Order the Helping Steps,"Helping well often depends on doing things in the right order, such as asking before you act, so sequencing makes that visible."
+sequencing,compassion,0.5,What Comes First for a Friend?,"Caring for someone has an order too: notice first, then ask, then help. Putting those steps in order practises reading a situation."
+sequencing,gratitude,0.4,Thank-You in Order,"A good thank-you has steps, such as noticing, saying it and showing it, and ordering them shows what gratitude involves."
+sequencing,justice,1.0,My Turn Your Turn,Building a sequence one block at a time gives each person an equal share of the making.
+sequencing,perseverance,0.8,Fix the Order,"When the order is wrong the program fails, and putting it right takes another try."
+sequencing,curiosity,0.6,What If We Swap Two Steps?,Changing the order and seeing what happens is a direct way to ask what if.
+sequencing,teamwork,0.6,Human Robot,Giving and following instructions in order needs two people working closely.
+sequencing,honesty,0.5,The True Order,"Reporting the real order in which things happened, not the order we wish they had, is a small exercise in truthful telling."
+loops,service,0.5,Keep Helping Loop,"Helping is often repeated, like handing out papers each day, and a loop shows how a small repeated act adds up."
+loops,compassion,0.5,Kind Words on Repeat,"A loop can repeat a kind act, and asking when to stop repeating it brings in noticing how the other person feels."
+loops,gratitude,0.6,Thank-You on Repeat,Some good actions are worth repeating every day.
+loops,justice,0.5,Everyone Gets a Turn Loop,A loop that visits every person once is a simple model of giving everyone a turn.
+loops,perseverance,1.0,The Cat That Kept Trying,A loop repeats the same small effort until the goal is reached.
+loops,curiosity,0.6,How Many Times?,Changing how many times a loop repeats and watching the result is an easy way to ask what if.
+loops,teamwork,0.8,Our Dance Loop,A repeating pattern made by two people only works if they keep in step.
+loops,honesty,0.4,Count It Truly,"Counting how many times a loop really ran, not how many we meant, practises reporting what actually happened."
+events,service,0.8,Tap to Help,A character can be programmed to respond when someone needs it.
+events,compassion,0.8,Bump Then Be Kind,"What happens after a bump is a choice, in a program and in real life."
+events,gratitude,0.5,Thank-You Button,"An event can trigger a response, so a button that plays a thank-you shows how noticing help leads to saying thanks."
+events,justice,0.5,Same Event Same Response,"Programs respond the same way to the same event for everyone, which is a simple picture of treating people alike."
+events,perseverance,0.4,Try the Button Again,"Events do not always do what we expect, so testing and trying again until the right event fires builds patience."
+events,curiosity,1.0,What Will It Do?,An event block invites the question of what will set the program going.
+events,teamwork,0.6,You Send I Respond,"One part of a program sends an event and another responds, like teammates who each wait for the other's signal."
+events,honesty,0.4,Does It Really Respond?,"Checking that the event really fires, and saying so when it does not, is honest testing."
+conditionals,service,0.5,If Someone Needs Help Then...,"Noticing a need is the if, and helping is the then, which makes service a rule you can build."
+conditionals,compassion,0.8,If a Friend Is Sad Then...,Noticing how someone feels is the 'if' that leads to a kind 'then'.
+conditionals,gratitude,0.5,If Someone Helped Then Thank,A rule that says if someone helped me then I thank them turns gratitude into a habit you can write down.
+conditionals,justice,1.0,If Someone Has Not Had a Turn,"An if-then rule applies the same way to everyone, which is what makes it fair."
+conditionals,perseverance,0.5,If It Fails Then Try Again,A rule that says if the first try fails then try another way is a simple model of not giving up.
+conditionals,curiosity,0.6,What If the Answer Changes?,Changing the condition and seeing a different result is a hands-on way to ask what if.
+conditionals,teamwork,0.5,If We Disagree Then...,Writing a rule for what the group does when members disagree makes teamwork's hard moments planned.
+conditionals,honesty,0.6,If I Made a Mistake Then I Say So,A true answer to the 'if' question is needed for the rule to work.
+variables,service,0.4,Count Our Helping,"A variable can keep count of how many times we helped, which makes small acts of service visible."
+variables,compassion,0.4,Feelings Meter,"Storing a feeling in a variable lets a program respond to it, which practises noticing how others feel."
+variables,gratitude,0.5,Thank-You Counter,Keeping a count of thank-yous given or received makes gratitude something we can notice and grow.
+variables,justice,0.8,The Turn Counter,A value that stores whose turn it is helps everyone share fairly.
+variables,perseverance,0.5,Try Counter,A variable that counts attempts shows that many tries are normal and progress is real.
+variables,curiosity,1.0,What If I Change the Number?,Changing a stored value and watching what happens invites the question 'what if?'.
+variables,teamwork,0.5,Team Score,A single shared variable that everyone adds to shows how individual efforts become one result.
+variables,honesty,0.6,Keep the Real Score,A stored value is only useful if it is the real one.
+debugging,service,0.5,Bug Helpers,"Helping a classmate find a bug without taking over their keyboard is practice in useful, respectful help."
+debugging,compassion,0.6,Kind Bug Buddies,A classmate whose program fails needs encouragement before advice.
+debugging,gratitude,0.5,Thank the Bug Finder,"When someone finds a bug in our work they are helping us, and saying thank you instead of feeling embarrassed changes how mistakes feel."
+debugging,justice,0.4,Fair Bug Blame,"Bugs are not anyone's fault, and discussing where a bug really came from avoids unfair blame."
+debugging,perseverance,1.0,Bug Hunt Try Again,Finding the step that fails and fixing it means trying again with a plan.
+debugging,curiosity,0.7,Be a Bug Detective,Treating a bug as a mystery to investigate rather than a failure builds curiosity about how the program really works.
+debugging,teamwork,0.6,Two Heads Find Bugs,"Two people often find a bug faster than one, because each notices what the other misses."
+debugging,honesty,0.8,I Found My Bug,Fixing a bug starts with saying plainly what went wrong.
+testing,service,0.5,Test It for Someone Else,Testing a program for the person who will use it is a way of serving them.
+testing,compassion,0.5,Test With Kindness,"Testers can say what is wrong without hurting the maker, which practises kind and honest feedback."
+testing,gratitude,0.4,Thank Your Testers,"Testers give their time to improve our work, and thanking them acknowledges the effort."
+testing,justice,0.5,Test for Everyone,"A good test checks that a program works for different kinds of users, not only the easiest case."
+testing,perseverance,0.6,Test It Again,"One test is rarely enough, so testing means coming back to it."
+testing,curiosity,0.8,Predict Run Change,A test is a way of finding out something you do not know yet.
+testing,teamwork,0.6,Test Each Other's Work,Swapping programs to test each other's work builds trust that feedback is meant to help.
+testing,honesty,1.0,Say What Really Happened,Testing only works if you report what actually happened.
+decomposition,service,0.5,Break Up a Big Helping Job,"A big helping job like tidying the classroom becomes doable when split into small parts, which makes service feel possible."
+decomposition,compassion,0.4,Understand the Whole Person,Breaking a problem into parts is like noticing the different things a person may be feeling instead of putting one big label on it.
+decomposition,gratitude,0.6,Many Parts Many Helpers,"Big things are made of many parts, each done by someone."
+decomposition,justice,0.5,Fair Shares of the Job,"Splitting a job into parts raises the question of who does which part, which is a question about fairness."
+decomposition,perseverance,1.0,One Small Part at a Time,A big job feels possible when it is done one small part at a time.
+decomposition,curiosity,0.6,What Are the Parts?,Taking something apart to see what it is made of is a way of asking how it works.
+decomposition,teamwork,0.8,Split the Job,"Once a job is split into parts, each person can take one."
+decomposition,honesty,0.4,Say What Is Done,"When a job is in parts, each person must say honestly whether their part is finished."
+patterns,service,0.4,Notice a Need Pattern,"Noticing a pattern, such as the same job always left undone, shows where help is most needed."
+patterns,compassion,0.5,Pattern of Feelings,Noticing when a friend is often sad at the same time or place is a pattern that points to how to care.
+patterns,gratitude,0.5,Patterns of Kindness,Looking for the pattern of who helps us each day shows how much we usually overlook.
+patterns,justice,0.8,Does the Rule Fit Everyone?,"A sorting rule can leave something out, and a fair rule has a place for everything."
+patterns,perseverance,0.5,Pattern Puzzle Persist,"Finding a pattern can take several wrong guesses, and keeping going after each one is the skill."
+patterns,curiosity,1.0,Pattern Detectives,Finding a pattern begins with noticing what is the same and what is different.
+patterns,teamwork,0.5,Pattern Pairs,Two people can often spot a pattern one would miss and test it together.
+patterns,honesty,0.6,Say What You See,A pattern is only useful if we describe what we really see.
+pair programming,service,0.8,Helper Hands,Helping a partner well means leaving them able to do it themselves.
+pair programming,compassion,0.5,Kind Partners,Working closely with a partner means noticing when they are frustrated and responding kindly.
+pair programming,gratitude,0.5,Thank Your Partner,"Pairs depend on each other, and thanking a partner for what they contributed builds appreciation."
+pair programming,justice,0.8,Fair Shares of the Keyboard,A shared device needs fair turns.
+pair programming,perseverance,0.5,Stuck Together,When two people get stuck together they can encourage each other to try again.
+pair programming,curiosity,0.5,Ask Your Partner Why,Asking a partner why they chose something teaches both people to explain and wonder.
+pair programming,teamwork,1.0,Driver and Navigator,Two programmers on one project succeed only by planning and working together.
+pair programming,honesty,0.5,Say What You Think,"Good partners say honestly when an idea is not working, kindly and clearly."
+sharing a project,service,0.8,A Project for Someone,A project can be made for someone else's enjoyment.
+sharing a project,compassion,0.8,One Kind True Thing,Looking at a classmate's work is a chance to find the good in it and say so.
+sharing a project,gratitude,1.0,Thank-You Credits,Finishing a project is the moment to thank the people who helped.
+sharing a project,justice,0.5,Fair Showcase,Sharing projects raises the question of whether everyone gets a fair chance to show their work.
+sharing a project,perseverance,0.5,Show the Messy Middle,Showing the tries and fixes behind a finished project celebrates persistence.
+sharing a project,curiosity,0.6,Questions for the Maker,Asking a classmate genuine questions about their project shows interest in how it was made.
+sharing a project,teamwork,0.6,Showcase Together,A shared showcase needs everyone to agree on how to present the group's work.
+sharing a project,honesty,0.6,What Is Really Mine?,Presenting a project honestly means saying what we did ourselves and what we had help with.

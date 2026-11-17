@@ -1,19 +1,13 @@
 """
-TF-IDF retrieval over the practice notes (why and how) and the virtue guides.
+TF-IDF retrieval over the catalog's text: virtue guides, "why it fits" notes and
+activities.
 
-The teacher's description is the query. Each passage is scored by cosine
+The teacher's optional note is the query. Each passage is scored by cosine
 similarity, and each virtue gets a retrieval score: the best score among its
-passages (0 to 1). The matching passages travel with the score as evidence for
-the explainer. Cue tags are a plain keyword backup, used only when the text
-search finds nothing.
-
-Files:
-  data/practices.csv  id, title, virtue, ..., cue_tags (tags split on "|")
-  data/notes.csv      id, why, how            (one row per practice id)
-  guides CSV          virtue, text[, title]   (optional, one row per passage)
+passages (0 to 1), plus a bonus when one of the virtue's cue tags appears in
+the note. The matching passages travel with the score as evidence.
 """
 
-import csv
 import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional
@@ -21,15 +15,18 @@ from typing import Dict, List, Optional
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
+from src.catalog import Catalog
+
 
 @dataclass(frozen=True)
 class Passage:
     """One indexed piece of text and where it came from."""
-    source: str                    # "note" or "guide"
+    source: str                    # "guide", "why" or "activity"
     virtue: str
     text: str
-    label: str                     # e.g. "Steps to Help (why)" or a guide title
-    practice_id: Optional[int] = None
+    label: str                     # e.g. "Fix the Recipe (why)"
+    topic: Optional[str] = None
+    band: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -45,64 +42,36 @@ class VirtueMatch:
     virtue: str
     score: float                   # 0 to 1
     method: str                    # "tfidf", "tfidf+cue-tags" or "cue-tags"
-    evidence: List[Hit]            # best passages first (empty for cue-tags)
-    cue_hits: List[str]            # cue tags found in the description
+    evidence: List[Hit]            # best passages first
+    cue_hits: List[str]            # cue tags found in the note
 
 
-def _read_csv(path: str) -> List[Dict[str, str]]:
-    with open(path, newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def load_note_passages(notes_path: str, practices_path: str) -> List[Passage]:
-    """Builds one passage per why and one per how, tagged with the practice's virtue."""
-    practices = {row["id"]: row for row in _read_csv(practices_path)}
-    passages = []
-    for row in _read_csv(notes_path):
-        practice = practices.get(row["id"])
-        if practice is None:
-            raise ValueError(f"notes.csv id {row['id']} is not in practices.csv")
-        for field in ("why", "how"):
-            text = (row.get(field) or "").strip()
-            if text:
-                passages.append(Passage(
-                    source="note",
-                    virtue=practice["virtue"].strip().lower(),
-                    text=text,
-                    label=f"{practice['title']} ({field})",
-                    practice_id=int(row["id"]),
-                ))
+def passages_from_catalog(catalog: Catalog) -> List[Passage]:
+    """Every virtue guide, every why and every activity in the catalog."""
+    passages = [
+        Passage("guide", v.name, v.guide, f"{v.name.title()} guide")
+        for v in catalog.virtues.values()
+    ]
+    passages += [
+        Passage("why", p.virtue, p.why, f"{p.title} (why)", topic=p.topic)
+        for p in catalog.pairs.values()
+    ]
+    passages += [
+        Passage("activity", a.virtue, a.text,
+                f"{catalog.pairs[(a.topic, a.virtue)].title} ({a.band} activity)",
+                topic=a.topic, band=a.band)
+        for a in catalog.activities.values()
+    ]
     return passages
-
-
-def load_guide_passages(guides_path: str) -> List[Passage]:
-    """Builds one passage per guide row (columns: virtue, text, optional title)."""
-    passages = []
-    for number, row in enumerate(_read_csv(guides_path), start=1):
-        text = (row.get("text") or "").strip()
-        virtue = (row.get("virtue") or "").strip().lower()
-        if text and virtue:
-            title = (row.get("title") or "").strip() or f"{virtue} guide {number}"
-            passages.append(Passage("guide", virtue, text, title))
-    return passages
-
-
-def load_cue_tags(practices_path: str) -> Dict[str, List[str]]:
-    """Returns each virtue's cue tags (the union over its practices)."""
-    tags: Dict[str, List[str]] = {}
-    for row in _read_csv(practices_path):
-        virtue = row["virtue"].strip().lower()
-        bucket = tags.setdefault(virtue, [])
-        for tag in (row.get("cue_tags") or "").split("|"):
-            tag = tag.strip().lower()
-            if tag and tag not in bucket:
-                bucket.append(tag)
-    return tags
 
 
 # Added to a virtue's text-match score when any of its cue tags appears in the
-# description. Tags are specific words ("blaming", "teasing"), so one is enough.
+# note. Tags are specific words ("blaming", "teasing"), so one is enough.
 CUE_BONUS = 0.3
+
+# Text matches weaker than this are treated as chance overlap of a word or two and
+# ignored. Cue tags are not affected.
+MIN_SIMILARITY = 0.25
 
 _SUFFIXES = ("ing", "ed", "es", "s", "ly")
 
@@ -123,9 +92,20 @@ def stem(word: str) -> str:
     return word
 
 
+# Words every classroom note and nearly every passage contains. They say nothing
+# about which virtue fits, and on a one-word note they would match by accident.
+DOMAIN_STOP_WORDS = {
+    "class", "classes", "classroom", "student", "students", "child", "children",
+    "kid", "kids", "teacher", "teachers", "lesson", "lessons", "today", "tomorrow",
+    "week", "day", "days", "year", "years", "old", "thing", "things", "group",
+    "groups", "everyone", "program", "programs", "programming", "code",
+}
+_STOP_WORDS = set(ENGLISH_STOP_WORDS) | DOMAIN_STOP_WORDS
+
+
 def _tokens(text: str) -> List[str]:
     return [stem(w) for w in re.findall(r"[a-z0-9']+", text.lower())
-            if w not in ENGLISH_STOP_WORDS]
+            if w not in _STOP_WORDS]
 
 
 def _words(text: str) -> str:
@@ -135,7 +115,7 @@ def _words(text: str) -> str:
 
 
 class VirtueRetriever:
-    """TF-IDF index over passages, queried with the teacher's description."""
+    """TF-IDF index over passages, queried with the teacher's note."""
 
     def __init__(
         self,
@@ -154,51 +134,46 @@ class VirtueRetriever:
         self._matrix = self._vectorizer.fit_transform(p.text for p in passages)
 
     @classmethod
-    def from_files(
-        cls,
-        notes_path: str,
-        practices_path: str,
-        guides_path: Optional[str] = None,
-    ) -> "VirtueRetriever":
-        passages = load_note_passages(notes_path, practices_path)
-        if guides_path:
-            passages += load_guide_passages(guides_path)
-        return cls(passages, load_cue_tags(practices_path))
+    def from_catalog(cls, catalog: Catalog) -> "VirtueRetriever":
+        return cls(
+            passages_from_catalog(catalog),
+            {name: info.cue_tags for name, info in catalog.virtues.items()},
+        )
 
-    def search(self, description: str, top_n: int = 5) -> List[Hit]:
+    def search(self, note: str, top_n: int = 5) -> List[Hit]:
         """Returns up to top_n passages with a similarity above 0, best first."""
-        if not description.strip():
+        if not note.strip():
             return []
-        query = self._vectorizer.transform([description])
+        query = self._vectorizer.transform([note])
         scores = linear_kernel(query, self._matrix).ravel()
-        order = scores.argsort()[::-1]
+        order = scores.argsort(kind="stable")[::-1]
         return [
             Hit(self.passages[i], float(scores[i]))
             for i in order[:top_n] if scores[i] > 0
         ]
 
-    def cue_matches(self, description: str) -> Dict[str, List[str]]:
-        """Cue tags from each virtue that appear in the description."""
-        text = _words(description)
+    def cue_matches(self, note: str) -> Dict[str, List[str]]:
+        """Cue tags from each virtue that appear in the note."""
+        text = _words(note)
         return {
             virtue: [tag for tag in self.cue_tags.get(virtue, []) if _words(tag) in text]
             for virtue in self.virtues
         }
 
     def match_virtues(
-        self, description: str, evidence_per_virtue: int = 3
+        self, note: str, evidence_per_virtue: int = 3
     ) -> Dict[str, VirtueMatch]:
         """
         Gives every virtue a retrieval score and its evidence passages.
 
-        When the text search finds something, a virtue's score is its best
-        passage similarity plus CUE_BONUS if any of its cue tags is found in the
-        description, capped at 1. If no
-        passage matches at all, the score is the share of the virtue's cue
-        tags found in the description.
+        Only text matches of at least MIN_SIMILARITY count. When one does, a virtue's score is its best
+        passage similarity plus CUE_BONUS if any of its cue tags is found in
+        the note, capped at 1. If no passage matches at all, the score is the
+        share of the virtue's cue tags found in the note.
         """
-        hits = self.search(description, top_n=len(self.passages))
-        cues = self.cue_matches(description)
+        hits = [h for h in self.search(note, top_n=len(self.passages))
+                if h.score >= MIN_SIMILARITY]
+        cues = self.cue_matches(note)
         use_text = bool(hits)
 
         results = {}
@@ -221,25 +196,3 @@ class VirtueRetriever:
                 cue_hits=cues[virtue],
             )
         return results
-
-
-def format_evidence(match: VirtueMatch) -> str:
-    """Formats a virtue's evidence as lines for the explainer's prompt."""
-    return "\n".join(
-        f'- [{h.passage.source}: {h.passage.label}] "{h.passage.text}" '
-        f"(similarity {h.score:.2f})"
-        for h in match.evidence
-    )
-
-
-if __name__ == "__main__":
-    import sys
-
-    query = " ".join(sys.argv[1:]) or "two children keep arguing about whose turn it is"
-    retriever = VirtueRetriever.from_files("data/notes.csv", "data/practices.csv")
-    ranked = sorted(retriever.match_virtues(query).values(), key=lambda m: -m.score)
-    print(f"Query: {query}\n")
-    for m in ranked:
-        print(f"{m.virtue:12s} {m.score:.3f}  ({m.method})")
-        if m.evidence:
-            print(format_evidence(m))

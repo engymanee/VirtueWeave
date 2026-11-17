@@ -1,12 +1,11 @@
 """
-Step 5 and 6 of the pipeline: the model writes two or three sentences per
-virtue for the teacher, and a guardrail checks what it wrote.
+Step 4 and 5 of the pipeline: the model writes two or three sentences per
+virtue saying how it fits the teacher's topic, and a guardrail checks them.
 
-Input to the model, per virtue: the retrieved passages (practice notes and
-guides), the scorer's reasons and the picked practices. Few-shot examples in
-the system prompt set a warm, plain tone. They can be switched off
-(with_examples=False) to compare. Both variants carry the same rules, so the
-only difference is the examples.
+The model is given the catalog's own "why it fits" text, the activity for the
+grade band, the virtue guide and the scorer's reasons, so it rewords facts it
+was handed and does not invent them. Few-shot examples in the system prompt set
+a warm, plain tone. They can be switched off (with_examples=False) to compare.
 
 The call goes through src.llm.call_json like every other model call.
 """
@@ -19,36 +18,38 @@ MIN_SENTENCES, MAX_SENTENCES = 2, 3
 MAX_CHARS = 600
 
 RULES = (
-    "You help a teacher of young children choose coding-lesson practices that "
-    "also build a virtue. For each virtue you are given, write two or three "
-    "sentences to the teacher about why it suits their class.\n"
+    "You help a computer science teacher bring a virtue into their lesson. For "
+    "each virtue you are given, write two or three sentences to the teacher "
+    "about how that virtue fits the topic they are teaching.\n"
     "Rules:\n"
     "- Speak to the teacher in a warm, plain voice, like a helpful colleague.\n"
     "- Use short everyday words. No jargon, no lists, no headings, no emoji.\n"
-    "- Use only the scorer's reasons and the retrieved passages you are given. "
-    "Do not invent facts, activities, links or numbers.\n"
-    "- Name each practice you mention in double quotes, exactly as titled.\n"
+    "- Use only the facts you are given: how_it_fits, the activity, the virtue "
+    "guide, the retrieved passages and the scorer's reasons. Do not invent "
+    "facts, activities, links or numbers.\n"
+    "- Name the activity in double quotes, exactly as titled, and say how it "
+    "suits the grade level and the minutes they have.\n"
+    "- If the teacher left a note about their class, connect to it. If not, "
+    "do not make one up.\n"
     "- Exactly 2 or 3 sentences per virtue. Avoid abbreviations with full stops.\n"
     'Return JSON: {"explanations": [{"virtue": "...", "text": "..."}]}, one item '
     "per virtue given, using the virtue name exactly as given."
 )
 
-# Invented virtues and practices, so the model copies the tone and not the content.
+# Invented topic, virtues and activities, so the model copies the tone and not the content.
 FEW_SHOT_EXAMPLES = [
     (
         {
-            "teacher_said": "Sequencing with my 7-year-olds, they rush and get cross when a step goes wrong.",
+            "topic": "sequencing", "grade": "2", "grade_band": "K-2", "minutes": 10,
+            "note": "they rush and get cross when a step goes wrong",
             "virtues": [{
                 "virtue": "patience",
-                "retrieval": {"score": 0.31, "method": "tfidf"},
-                "practices": [{
-                    "title": "Slow Robot", "minutes": 10, "ages": "5-7",
-                    "reasons": ["topic match: sequencing (+2.0)", "retrieval 0.31 for patience (text match)"],
-                }],
-                "retrieved_passages": [
-                    "[Slow Robot (why)] A robot only does the steps it is given, so rushing a step makes it fail.",
-                    "[Slow Robot (how)] One child gives one instruction at a time and the robot carries it out.",
-                ],
+                "guide": "Patience is waiting calmly and doing things one at a time.",
+                "how_it_fits": "A robot only does the steps it is given, so rushing a step makes it fail.",
+                "activity": {"title": "Slow Robot", "minutes": 10,
+                             "text": "One child gives one instruction at a time and the robot carries it out."},
+                "reasons": ["topic fit 0.8 for patience in sequencing (+0.80)",
+                            "your note matches patience: retrieval 0.31 (+0.93)"],
             }],
         },
         {"explanations": [{"virtue": "patience", "text": (
@@ -61,24 +62,22 @@ FEW_SHOT_EXAMPLES = [
     ),
     (
         {
-            "teacher_said": "Variables with 6-year-olds, 15 minutes, a few are shy about showing their work.",
+            "topic": "variables", "grade": "9", "grade_band": "9-12", "minutes": 30,
+            "note": None,
             "virtues": [{
                 "virtue": "courage",
-                "retrieval": {"score": 0.0, "method": "cue-tags"},
-                "practices": [{
-                    "title": "Show One Thing", "minutes": 10, "ages": "5-7",
-                    "reasons": ["topic match: variables (+2.0)", "cue tags for courage: shy (0.17)"],
-                }],
-                "retrieved_passages": [
-                    "[Show One Thing (how)] Each child shows a partner one thing they changed in their program.",
-                ],
+                "guide": "Courage is doing something even when it feels risky.",
+                "how_it_fits": "Showing the values a program stores means showing real work, including the parts that are not finished.",
+                "activity": {"title": "Show Your Variables", "minutes": 30,
+                             "text": "Students walk a partner through their program and explain what each variable holds."},
+                "reasons": ["topic fit 0.7 for courage in variables (+0.70)"],
             }],
         },
         {"explanations": [{"virtue": "courage", "text": (
-            "Your shy children may find it easier to share when they only have "
-            'to show one small thing. "Show One Thing" asks each child to tell '
-            "a partner what they changed, which is a gentle first step before "
-            "a bigger audience. It suits variables and fits inside your fifteen minutes."
+            "Explaining what each variable holds means showing real, unfinished work, "
+            "and that takes a little courage. \"Show Your Variables\" lets students "
+            "practise it with one partner before any bigger audience. It suits your "
+            "thirty minutes and an older group that can explain their thinking."
         )}]},
     ),
 ]
@@ -113,49 +112,33 @@ def _schema() -> Dict:
     }
 
 
-def group_by_virtue(picks: List[Any]) -> Dict[str, List[Any]]:
-    """Picks grouped by virtue, in the order each virtue first appears."""
-    groups: Dict[str, List[Any]] = {}
-    for pick in picks:
-        groups.setdefault(pick.practice["virtue"], []).append(pick)
-    return groups
-
-
-def build_input(sentence: str, picks: List[Any], matches: Dict) -> Dict:
-    """The user message: one entry per virtue with practices, reasons and passages."""
-    virtues = []
-    for virtue, group in group_by_virtue(picks).items():
-        passages, seen = [], set()
-        for pick in group:
-            for e in pick.evidence:
-                if e["text"] not in seen:
-                    seen.add(e["text"])
-                    passages.append(f"[{e['label']}] {e['text']}")
-        match = matches.get(virtue)
-        virtues.append({
-            "virtue": virtue,
-            "retrieval": {"score": round(match.score, 2), "method": match.method} if match else None,
-            "practices": [{
-                "title": p.practice["title"], "minutes": p.practice["minutes"],
-                "ages": f"{p.practice['age_min']}-{p.practice['age_max']}",
-                "reasons": p.reasons,
-            } for p in group],
-            "retrieved_passages": passages[:6],
-        })
-    return {"teacher_said": sentence, "virtues": virtues}
+def build_input(request: Any, picks: List[Any], guides: Dict[str, str]) -> Dict:
+    """The user message: the request plus one entry per picked virtue."""
+    return {
+        "topic": request.topic, "grade": request.grade, "grade_band": request.band,
+        "minutes": request.minutes, "note": request.note or None,
+        "virtues": [{
+            "virtue": p.virtue,
+            "guide": guides.get(p.virtue, ""),
+            "how_it_fits": p.why,
+            "activity": {"title": p.title, "minutes": p.activity_minutes, "text": p.activity},
+            "reasons": p.reasons,
+            "retrieved_passages": [e["text"] for e in p.evidence if e["source"] != "guide"][:4],
+        } for p in picks],
+    }
 
 
 def explain(
-    sentence: str,
+    request: Any,
     picks: List[Any],
-    matches: Dict,
+    guides: Dict[str, str],
     model_call: Callable[..., Dict],
     with_examples: bool = True,
 ) -> Dict[str, str]:
     """One model call. Returns {virtue: text}. Raises ValueError if the shape is wrong."""
     data = model_call(
         build_system_prompt(with_examples),
-        json.dumps(build_input(sentence, picks, matches)),
+        json.dumps(build_input(request, picks, guides)),
         _schema(),
     )
     items = data.get("explanations")
@@ -175,7 +158,7 @@ def count_sentences(text: str) -> int:
 
 def guard_output(explanations: Dict[str, str], picks: List[Any]) -> str:
     """Returns a reason the wording failed, or "" if it passes."""
-    wanted = set(group_by_virtue(picks))
+    wanted = {p.virtue for p in picks}
     if set(explanations) != wanted:
         return f"explanations cover {sorted(explanations)}, expected {sorted(wanted)}"
     for virtue, text in explanations.items():

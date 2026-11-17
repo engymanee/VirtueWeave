@@ -1,594 +1,212 @@
-# 🎵 Music Recommender Simulation
+# VirtueWeave
 
-## Project Summary
+**A virtue recommender system for computer science teachers.**
 
-In this project you will build and explain a small music recommender system.
+Tell VirtueWeave the topic you are teaching, the grade, and how many minutes you have. It recommends the **three virtues** that fit best. For each one it explains **why it fits** the topic and **how to bring it into the lesson**, with an activity sized to the grade and the time.
 
-Your goal is to:
+## Why it matters
 
-- Represent songs and a user "taste profile" as data
-- Design a scoring rule that turns that data into recommendations
-- Evaluate what your system gets right and wrong
-- Reflect on how this mirrors real world AI recommenders
+Teachers are asked to build character as well as skills, but virtue education is rarely connected to the lessons they already teach. A teacher planning a lesson on loops does not have time to work out how perseverance, fairness or gratitude could live inside it. VirtueWeave does that matching for them in seconds and shows its reasoning, so the teacher can trust it, adapt it, or ignore it.
 
-Replace this paragraph with your own summary of what your version does.
+## Where it came from
 
----
+VirtueWeave grew out of my Modules 1-3 project, the **Music Recommender Simulation**. That project scored songs against a listener's taste profile (genre, mood, energy, and later popularity, decade, mood tags, language and instrumentalness). It had switchable ranking strategies, a diversity penalty for repeated artists and genres, and a table of reasons that explained every score. VirtueWeave keeps the same core idea: score the options, rank them, and say why. It applies that idea to virtues and lessons instead of songs, and it adds retrieval, a language model, guardrails and a web interface.
 
-## How The System Works
+## What you get
 
-Real-world platforms like Spotify and YouTube combine two signals. Collaborative filtering learns from the behavior of millions of users ("people like you also liked this"), and content-based filtering compares the attributes of the songs themselves. This simulation is content-based only. It has no listening history from other users, so it compares each song's attributes to one user's stated taste. It scores each song on the user's preferred **genre**, **mood**, and **energy**.
+| You enter | You get |
+|---|---|
+| A topic (12 to choose from), a grade (K-12), minutes, and an optional note such as "they keep giving up" | Three virtues, each with **Why it fits** (how the virtue connects to the topic) and **How to bring it in** (a titled activity for that grade band, with its length) |
 
-### Song features
+## Architecture overview
 
-Each `Song` stores:
+The system is a short pipeline over three small data files. One function, `run_pipeline()` in `src/pipeline.py`, runs the steps in order and writes a JSON trace of every run to `traces/`.
 
-- `genre` and `mood` (categories)
-- `energy`, `valence`, `danceability`, `acousticness` (0.0 to 1.0)
-- `tempo_bpm` (beats per minute)
-- `id`, `title`, `artist` (identifying info, not used for scoring)
+```mermaid
+flowchart TD
+    A["Teacher chooses a topic, a grade (K-12) and minutes<br/>and may add a note about the class"] --> B{"Input guardrail<br/>topic is one of 12, grade K-12,<br/>minutes 1-180, safe note"}
+    B -- blocked --> X["Stop with a clear message"]
+    B -- ok --> C{"Is there a note?"}
 
-### UserProfile features
+    C -- yes --> R["Retrieve: TF-IDF over virtue guides,<br/>why-it-fits notes and activities<br/>plus a bonus for cue tags"]
+    C -- no --> K["Score the 8 virtues<br/>for the topic"]
+    R --> K
 
-Each `UserProfile` stores:
+    G[("virtues.csv<br/>8 guides and cue tags")] --> R
+    W[("virtue_fit.csv<br/>96 topic x virtue pairs:<br/>fit and why it fits")] --> R
+    W --> K
+    AC[("activities.csv<br/>384 activities, one per<br/>grade band: K-2, 3-5, 6-8, 9-12")] --> R
+    AC --> K
 
-- `favorite_genre`
-- `favorite_mood`
-- `target_energy` (0.0 to 1.0)
-- `likes_acoustic` (True or False)
-
-### How a song is scored
-
-Each song gets a score from 0 to 4.0 by adding up three parts:
-
-- **Genre:** +1.0 if the song's genre matches the user's favorite genre, otherwise 0.
-- **Mood:** +1.0 if the song's mood matches the user's favorite mood, otherwise 0.
-- **Energy:** up to +2.0 based on how close the song is to `target_energy`, using `2.0 * (1 - |song energy - target energy|)`. `target_energy` is clamped to 0.0–1.0 first, so the energy part never goes negative. A song is not rewarded for simply having more energy.
-
-Genre and mood are weighted equally, and energy is worth the most (up to twice either label). A song with the right energy and no label matches (up to 2.0) can beat a song that matches one label but has the wrong energy. Genre alone no longer outweighs a large energy mismatch.
-
-### Ranking modes
-
-You can change how much each part of the score is worth. There are three modes. Each one adds up to 4.0.
-
-| Mode | Genre | Mood | Energy |
-|---|---|---|---|
-| `genre-first` | 2.0 | 1.0 | 1.0 |
-| `mood-first` | 1.0 | 2.0 | 1.0 |
-| `energy-focused` (default) | 1.0 | 1.0 | 2.0 |
-
-```
-python3 -m src.main                      # default mode
-python3 -m src.main --mode mood-first    # pick a mode
-python3 -m src.main --mode all           # run every mode
-python3 -m src.main --profile rock       # only profiles with "rock" in the name
+    K --> T3["Pick the top 3 virtues<br/>score = fit + note match<br/>activities that fit the time come first,<br/>longer ones are flagged"]
+    T3 --> E["Explain: the model writes 2-3 sentences<br/>per virtue on how it fits the topic"]
+    E -- model unavailable --> H["Use the catalog's why-it-fits text"]
+    E --> F{"Output guardrail<br/>right virtues, 2-3 sentences,<br/>short, no links"}
+    F -- fail --> H
+    F -- pass --> I["Three virtue cards<br/>Why it fits<br/>How to bring it in"]
+    H --> I
+    I --> J["Teacher accepts or rejects each virtue"]
+    J --> FB[("feedback.jsonl")]
+    I --> TR[("Trace log: one JSON file per run")]
 ```
 
-In code, pass a strategy: `recommend_songs(prefs, songs, strategy=MOOD_FIRST)`.
+1. **Input guardrail.** Checks that the topic is one of the 12, the grade is K-12, the minutes are 1-180, and the note is short and does not try to give the assistant instructions. Anything else stops with a clear message.
+2. **Retrieve (only if there is a note).** A TF-IDF index (scikit-learn) covers the virtue guides, the "why it fits" notes and the activities. The note is the query. Each virtue gets a score from its best-matching passage, plus a bonus when one of its cue tags (for example "teasing" or "blaming") appears in the note. Weak matches are ignored.
+3. **Rank.** Every one of the 8 virtues is scored: its fit for the topic from the table, plus the note match. Virtues whose activity fits the teacher's time come first; any that run longer are flagged. The top 3 are kept.
+4. **Explain.** One language-model call writes two or three warm sentences per virtue about how it fits the topic. The model is given the catalog's own text and the scorer's reasons, so it rewords facts it was handed and does not invent them. If the model is unavailable, the catalog's own "why it fits" text is shown.
+5. **Output guardrail.** Checks the model's wording: the right virtues, 2-3 sentences each, a length limit, no links. If it fails, the catalog text is shown instead.
 
-### Diversity penalty
+**The data** (`data/`):
 
-By default, the top 5 can include two songs from one artist or genre. Turn on the diversity penalty to avoid that:
+| File | Contents |
+|---|---|
+| `virtues.csv` | 8 virtues, each with a short guide and cue tags |
+| `virtue_fit.csv` | 96 rows, one for every topic x virtue pair: a fit score (0-1), an activity title and a "why it fits" sentence |
+| `activities.csv` | 384 rows: one activity for every pair in each of four grade bands (K-2, 3-5, 6-8, 9-12), with its length in minutes |
 
-```
-python3 -m src.main --diverse
-```
+**The code** (`src/`): `catalog.py` loads and validates the data, `retrieval.py` is the TF-IDF index, `pipeline.py` is the pipeline, `explainer.py` is the model step and its guardrail, `llm.py` is the only place a model is called, `evaluate.py` is the evaluation, and `main.py` is the command line. `server.py` and `static/` are the website.
 
-Songs are picked one at a time. A song loses 0.75 points for each already-picked song by the same artist, and 0.25 for each in the same genre. The penalty stacks and a score never goes below 0. A penalized song shows why in its reasons. In code, pass `diversity=DEFAULT_DIVERSITY` to `recommend_songs`.
+## Setup
 
-### Table output
-
-For a compact view, add `--table`. Each row shows the song, its score out of the maximum, and the reasons for that score. A summary line follows. Long reasons wrap to fit your terminal.
-
-```
-python3 -m src.main --table
-python3 -m src.main --table --mode mood-first --diverse
-```
-
-Sample (`python3 -m src.main --table --profile "High-Energy Pop"` at 80 columns):
-
-```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=pop, mood=happy, energy=0.9
-Top 5 recommendations
-----------------------------------------------------------------
-+---+-------------------+-----------+--------------------------------------+
-| # | Song              |     Score | Reasons                              |
-+---+-------------------+-----------+--------------------------------------+
-| 1 | Sunrise City      | 3.84/4.00 | - genre match: pop (+1.0)            |
-|   | by Neon Echo      |           | - mood match: happy (+1.0)           |
-|   |                   |           | - energy 0.82 vs target 0.90 (+1.84) |
-+---+-------------------+-----------+--------------------------------------+
-| 2 | Gym Hero          | 2.94/4.00 | - genre match: pop (+1.0)            |
-|   | by Max Pulse      |           | - energy 0.93 vs target 0.90 (+1.94) |
-+---+-------------------+-----------+--------------------------------------+
-| 3 | Rooftop Lights    | 2.72/4.00 | - mood match: happy (+1.0)           |
-|   | by Indigo Parade  |           | - energy 0.76 vs target 0.90 (+1.72) |
-+---+-------------------+-----------+--------------------------------------+
-| 4 | Storm Runner      | 1.98/4.00 | - energy 0.91 vs target 0.90 (+1.98) |
-|   | by Voltline       |           |                                      |
-+---+-------------------+-----------+--------------------------------------+
-| 5 | Fuego en la Noche | 1.90/4.00 | - energy 0.85 vs target 0.90 (+1.90) |
-|   | by Luna Caliente  |           |                                      |
-+---+-------------------+-----------+--------------------------------------+
-Summary: top pick Sunrise City (3.84/4.00) | scores 1.90 to 3.84 | 5 songs by 5 artists
-
-================================================================
-```
-
-### How songs are chosen
-
-The `Recommender` scores every song in the catalog, sorts them from highest to lowest score, and returns the top `k` (5 by default). Each result includes a short explanation of why it was picked.
-
----
-
-## Getting Started
-
-### Setup
-
-1. Create a virtual environment (optional but recommended):
-
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate      # Mac or Linux
-   .venv\Scripts\activate         # Windows
-
-2. Install dependencies
+You need Python 3.10 or newer.
 
 ```bash
+# 1. Get the code and enter the folder
+cd VirtueWeave
+
+# 2. (Recommended) create a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 3. Install the requirements
 pip install -r requirements.txt
+
+# 4. (Optional) turn on the written explanations from the model
+export ANTHROPIC_API_KEY="your-key"
 ```
 
-3. Run the app:
+The app works **without** an API key. It then shows the catalog's own "why it fits" text instead of the model's wording.
+
+**Run the website**
 
 ```bash
-python -m src.main
+python3 -m uvicorn server:app --port 8000
 ```
 
-### Running Tests
+Open http://localhost:8000, choose a topic, grade and minutes, and press **Recommend**.
 
-Run the starter tests with:
+**Or use the command line**
 
 ```bash
-pytest
+python3 -m src.main --topic loops --grade 1 --minutes 15 --note "they keep giving up"
 ```
 
-You can add more tests in `tests/test_recommender.py`.
+**Run the tests and the evaluation**
 
----
-
-## Sample Recommendation Output
-
-Running `python3 -m src.main` runs the recommender for three typical profiles and six adversarial/edge-case profiles, printing the top 5 results for each.
-
-### High-Energy Pop
-
-```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=pop, mood=happy, energy=0.9
-Top 5 recommendations
-----------------------------------------------------------------
-
-#1  Sunrise City  by Neon Echo
-    Score: 3.84 / 4.00
-    Reasons:
-      - genre match: pop (+1.0)
-      - mood match: happy (+1.0)
-      - energy 0.82 vs target 0.90 (+1.84)
-
-#2  Gym Hero  by Max Pulse
-    Score: 2.94 / 4.00
-    Reasons:
-      - genre match: pop (+1.0)
-      - energy 0.93 vs target 0.90 (+1.94)
-
-#3  Rooftop Lights  by Indigo Parade
-    Score: 2.72 / 4.00
-    Reasons:
-      - mood match: happy (+1.0)
-      - energy 0.76 vs target 0.90 (+1.72)
-
-#4  Storm Runner  by Voltline
-    Score: 1.98 / 4.00
-    Reasons:
-      - energy 0.91 vs target 0.90 (+1.98)
-
-#5  Fuego en la Noche  by Luna Caliente
-    Score: 1.90 / 4.00
-    Reasons:
-      - energy 0.85 vs target 0.90 (+1.90)
-
-================================================================
+```bash
+python3 -m pytest                     # 87 tests
+python3 -m src.evaluate               # 12-case evaluation, offline (no model calls)
+python3 -m src.evaluate --live        # same cases with the real model (costs money)
 ```
 
-### Chill Lofi
+## Sample interactions
+
+These three runs were produced with the command line **without an API key**, so the "How it fits" line is the catalog's own text. With a key, that line becomes two or three sentences written by the model.
+
+**1. Loops, grade 1, 15 minutes, note: "they keep giving up"**
 
 ```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=lofi, mood=chill, energy=0.35
-Top 5 recommendations
-----------------------------------------------------------------
+#1  Perseverance  (score 1.90)
+    How it fits: A loop repeats the same small effort until the goal is reached.
+    Try "The Cat That Kept Trying" (15 min): Children use a Repeat block to move a character a little each time until it arrives, and tell the story of not giving up.
 
-#1  Library Rain  by Paper Lanterns
-    Score: 4.00 / 4.00
-    Reasons:
-      - genre match: lofi (+1.0)
-      - mood match: chill (+1.0)
-      - energy 0.35 vs target 0.35 (+2.00)
+#2  Teamwork  (score 1.56)
+    How it fits: A repeating pattern made by two people only works if they keep in step.
+    Try "Our Dance Loop" (10 min): Pairs invent a three-move dance, perform it as a loop, then program it with a Repeat block.
 
-#2  Midnight Coding  by LoRoom
-    Score: 3.86 / 4.00
-    Reasons:
-      - genre match: lofi (+1.0)
-      - mood match: chill (+1.0)
-      - energy 0.42 vs target 0.35 (+1.86)
-
-#3  Focus Flow  by LoRoom
-    Score: 2.90 / 4.00
-    Reasons:
-      - genre match: lofi (+1.0)
-      - energy 0.40 vs target 0.35 (+1.90)
-
-#4  Spacewalk Thoughts  by Orbit Bloom
-    Score: 2.86 / 4.00
-    Reasons:
-      - mood match: chill (+1.0)
-      - energy 0.28 vs target 0.35 (+1.86)
-
-#5  Coffee Shop Stories  by Slow Stereo
-    Score: 1.96 / 4.00
-    Reasons:
-      - energy 0.37 vs target 0.35 (+1.96)
-
-================================================================
+#3  Gratitude  (score 0.60)
+    How it fits: Some good actions are worth repeating every day.
+    Try "Thank-You on Repeat" (5 min): Children name a thank-you they say every day and program a character to say it in a loop.
 ```
 
-### Deep Intense Rock
+**2. Debugging, grade 9, 30 minutes, note: "some blame their partner when it breaks"**
 
 ```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=rock, mood=intense, energy=0.95
-Top 5 recommendations
-----------------------------------------------------------------
+#1  Honesty  (score 1.30)
+    How it fits: Fixing a bug starts with saying plainly what went wrong.
+    Try "I Found My Bug" (30 min): Students write a candid post-mortem of a bug they caused, covering cause, impact and fix.
 
-#1  Storm Runner  by Voltline
-    Score: 3.92 / 4.00
-    Reasons:
-      - genre match: rock (+1.0)
-      - mood match: intense (+1.0)
-      - energy 0.91 vs target 0.95 (+1.92)
+#2  Teamwork  (score 1.10)
+    How it fits: Two people often find a bug faster than one, because each notices what the other misses.
+    Try "Two Heads Find Bugs" (30 min): Teams run paired debugging sessions with set roles and reflect on what each role caught.
 
-#2  Gym Hero  by Max Pulse
-    Score: 2.96 / 4.00
-    Reasons:
-      - mood match: intense (+1.0)
-      - energy 0.93 vs target 0.95 (+1.96)
-
-#3  Neon Overdrive  by Pulse Drift
-    Score: 1.98 / 4.00
-    Reasons:
-      - energy 0.96 vs target 0.95 (+1.98)
-
-#4  Iron Verdict  by Black Anvil
-    Score: 1.96 / 4.00
-    Reasons:
-      - energy 0.97 vs target 0.95 (+1.96)
-
-#5  Fuego en la Noche  by Luna Caliente
-    Score: 1.80 / 4.00
-    Reasons:
-      - energy 0.85 vs target 0.95 (+1.80)
-
-================================================================
+#3  Perseverance  (score 1.00)
+    How it fits: Finding the step that fails and fixing it means trying again with a plan.
+    Try "Bug Hunt Try Again" (30 min): Students tackle a hard bug with a documented hypothesis-and-test cycle and reflect on staying with the problem.
 ```
 
-### Conflicting: Sad but High Energy
+The note about blaming moved Honesty to the top. Without a note, Perseverance would lead for debugging.
+
+**3. Patterns, kindergarten, 5 minutes, no note**
 
 ```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=pop, mood=sad, energy=0.9
-Top 5 recommendations
-----------------------------------------------------------------
+#1  Honesty  (score 0.60)
+    How it fits: A pattern is only useful if we describe what we really see.
+    Try "Say What You See" (5 min): Children describe an object's features exactly before deciding where it goes.
 
-#1  Gym Hero  by Max Pulse
-    Score: 2.94 / 4.00
-    Reasons:
-      - genre match: pop (+1.0)
-      - energy 0.93 vs target 0.90 (+1.94)
+#2  Curiosity  (score 1.00)
+    How it fits: Finding a pattern begins with noticing what is the same and what is different.
+    Try "Pattern Detectives" (10 min)  [runs 10 min, over your 5]: Children guess a hidden sorting rule and test the guess with new objects.
 
-#2  Sunrise City  by Neon Echo
-    Score: 2.84 / 4.00
-    Reasons:
-      - genre match: pop (+1.0)
-      - energy 0.82 vs target 0.90 (+1.84)
-
-#3  Storm Runner  by Voltline
-    Score: 1.98 / 4.00
-    Reasons:
-      - energy 0.91 vs target 0.90 (+1.98)
-
-#4  Fuego en la Noche  by Luna Caliente
-    Score: 1.90 / 4.00
-    Reasons:
-      - energy 0.85 vs target 0.90 (+1.90)
-
-#5  Neon Overdrive  by Pulse Drift
-    Score: 1.88 / 4.00
-    Reasons:
-      - energy 0.96 vs target 0.90 (+1.88)
-
-================================================================
+#3  Justice  (score 0.80)
+    How it fits: A sorting rule can leave something out, and a fair rule has a place for everything.
+    Try "Does the Rule Fit Everyone?" (15 min)  [runs 15 min, over your 5]: Children sort objects by a rule, find one that does not fit and change the rule.
 ```
 
-### Genre-Only Trap (Metal, Chill, Low)
+Only one activity fits in five minutes, so it comes first. The other two are shown with a clear warning that they run longer than the time available.
 
-```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=metal, mood=chill, energy=0.2
-Top 5 recommendations
-----------------------------------------------------------------
+## Design decisions and trade-offs
 
-#1  Spacewalk Thoughts  by Orbit Bloom
-    Score: 2.84 / 4.00
-    Reasons:
-      - mood match: chill (+1.0)
-      - energy 0.28 vs target 0.20 (+1.84)
+- **A fixed topic x virtue table instead of free generation.** Every recommendation traces back to a row someone can read and correct. That makes the system predictable and checkable. The trade-off is scope: it covers 12 topics and 8 virtues, and the content needs expert review. It cannot handle a topic that is not in the table.
+- **The model only rewords facts it is given.** It receives the catalog text, the activity and the scorer's reasons, and its output goes through a guardrail with a fallback. This keeps the model from inventing activities, and it means the whole app works without a model. The trade-off is that the wording is less personal than free generation would be.
+- **TF-IDF retrieval instead of embeddings.** It is deterministic, needs no extra service, and every match can be explained. The trade-off is that it only matches words. A small stemmer, a cue-tag bonus, a similarity floor and a list of stop words such as "class" and "kids" patch that, but a note phrased in unusual words can still be missed.
+- **Four grade bands instead of thirteen grades.** 384 activities was a size I could write and review. The trade-off is that grades 3 and 5 get the same activity.
+- **Time handling.** Activities that fit the time come first, and longer ones are flagged. The trade-off is that a lower-fit virtue can outrank a better one when time is short, as in sample 3.
+- **No `temperature=0`.** I wanted deterministic model output, but the current API rejects sampling parameters on every model. I used a JSON schema, a short fixed prompt and low effort instead. The model's wording can still vary between runs, which is why the guardrail checks the shape and not the exact text.
+- **Plain HTML and JavaScript with a small FastAPI server, not a notebook-style app.** It gave me full control of the look and made the page easy to test. It cost more code.
+- **A trace for every run.** Each run writes a JSON file with every step's input, output and timing, which made debugging and evaluation much easier.
 
-#2  Library Rain  by Paper Lanterns
-    Score: 2.70 / 4.00
-    Reasons:
-      - mood match: chill (+1.0)
-      - energy 0.35 vs target 0.20 (+1.70)
+## Testing summary
 
-#3  Midnight Coding  by LoRoom
-    Score: 2.56 / 4.00
-    Reasons:
-      - mood match: chill (+1.0)
-      - energy 0.42 vs target 0.20 (+1.56)
+**What I built.** 87 automated tests cover the catalog checks, retrieval, the pipeline (including every guardrail and fallback path), the web API and the model wrapper. A separate 12-case evaluation (`src/evaluate.py`) runs the whole pipeline: 5 ordinary requests with the virtue that should come first, 2 vague notes that must not change the default order, and 5 guardrail cases (4 inputs that must be blocked, 1 where the model's wording is bad and the fallback must appear).
 
-#4  Rainfall Nocturne  by Elara Voss
-    Score: 1.96 / 4.00
-    Reasons:
-      - energy 0.22 vs target 0.20 (+1.96)
+**Results (offline):** 12 of 12 cases pass. The expected virtue is first in 5 of 5 ordinary cases, there are 0 constraint violations (always 3 distinct virtues, the right grade band, correct time flags), and repeat runs give identical results.
 
-#5  Coffee Shop Stories  by Slow Stereo
-    Score: 1.66 / 4.00
-    Reasons:
-      - energy 0.37 vs target 0.20 (+1.66)
+**What worked.** The guardrails and fallbacks held in every test. The evaluation caught real problems that unit tests alone would not have.
 
-================================================================
-```
+**What didn't work at first, and what I learned.**
+- The first evaluation passed 10 of 12. The teasing and blaming cases ranked the wrong virtue first because the note's words ("tease", "blame") did not match the data's words ("teasing", "blaming"). A small stemmer and a cue-tag bonus fixed it, but I tuned that on the same five cases, so 5 of 5 may be optimistic.
+- The vague-note cases failed because a one-word note like "class" matched some activities by accident. A similarity floor and stop words fixed it.
+- One of my own test inputs was wrong ("thanks" really does match gratitude), which reminded me to question the test as well as the code.
+- A bug that made the cards render as `[object HTMLElement]` only showed up when I looked at a screenshot of the page.
 
-### Classical + Angry + Max Energy
-
-```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=classical, mood=angry, energy=1.0
-Top 5 recommendations
-----------------------------------------------------------------
-
-#1  Iron Verdict  by Black Anvil
-    Score: 2.94 / 4.00
-    Reasons:
-      - mood match: angry (+1.0)
-      - energy 0.97 vs target 1.00 (+1.94)
-
-#2  Neon Overdrive  by Pulse Drift
-    Score: 1.92 / 4.00
-    Reasons:
-      - energy 0.96 vs target 1.00 (+1.92)
-
-#3  Gym Hero  by Max Pulse
-    Score: 1.86 / 4.00
-    Reasons:
-      - energy 0.93 vs target 1.00 (+1.86)
-
-#4  Storm Runner  by Voltline
-    Score: 1.82 / 4.00
-    Reasons:
-      - energy 0.91 vs target 1.00 (+1.82)
-
-#5  Fuego en la Noche  by Luna Caliente
-    Score: 1.70 / 4.00
-    Reasons:
-      - energy 0.85 vs target 1.00 (+1.70)
-
-================================================================
-```
-
-### Out-of-Range Energy (2.0)
-
-```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=lofi, mood=chill, energy=2.0
-Top 5 recommendations
-----------------------------------------------------------------
-
-#1  Midnight Coding  by LoRoom
-    Score: 2.84 / 4.00
-    Reasons:
-      - genre match: lofi (+1.0)
-      - mood match: chill (+1.0)
-      - energy 0.42 vs target 1.00 (+0.84)
-
-#2  Library Rain  by Paper Lanterns
-    Score: 2.70 / 4.00
-    Reasons:
-      - genre match: lofi (+1.0)
-      - mood match: chill (+1.0)
-      - energy 0.35 vs target 1.00 (+0.70)
-
-#3  Iron Verdict  by Black Anvil
-    Score: 1.94 / 4.00
-    Reasons:
-      - energy 0.97 vs target 1.00 (+1.94)
-
-#4  Neon Overdrive  by Pulse Drift
-    Score: 1.92 / 4.00
-    Reasons:
-      - energy 0.96 vs target 1.00 (+1.92)
-
-#5  Gym Hero  by Max Pulse
-    Score: 1.86 / 4.00
-    Reasons:
-      - energy 0.93 vs target 1.00 (+1.86)
-
-================================================================
-```
-
-### Case Mismatch (Pop/Happy)
-
-```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=Pop, mood=Happy, energy=0.8
-Top 5 recommendations
-----------------------------------------------------------------
-
-#1  Sunrise City  by Neon Echo
-    Score: 1.96 / 4.00
-    Reasons:
-      - energy 0.82 vs target 0.80 (+1.96)
-
-#2  Concrete Crown  by Kid Meridian
-    Score: 1.96 / 4.00
-    Reasons:
-      - energy 0.78 vs target 0.80 (+1.96)
-
-#3  Rooftop Lights  by Indigo Parade
-    Score: 1.92 / 4.00
-    Reasons:
-      - energy 0.76 vs target 0.80 (+1.92)
-
-#4  Fuego en la Noche  by Luna Caliente
-    Score: 1.90 / 4.00
-    Reasons:
-      - energy 0.85 vs target 0.80 (+1.90)
-
-#5  Night Drive Loop  by Neon Echo
-    Score: 1.90 / 4.00
-    Reasons:
-      - energy 0.75 vs target 0.80 (+1.90)
-
-================================================================
-```
-
-### Unknown Genre and Mood
-
-```
-================================================================
-                       MUSIC RECOMMENDER                        
-================================================================
-Profile: genre=k-pop, mood=sad, energy=0.5
-Top 5 recommendations
-----------------------------------------------------------------
-
-#1  Dusty Porch Swing  by Willow Creek
-    Score: 1.96 / 4.00
-    Reasons:
-      - energy 0.48 vs target 0.50 (+1.96)
-
-#2  Velvet Hours  by Amara Sol
-    Score: 1.96 / 4.00
-    Reasons:
-      - energy 0.52 vs target 0.50 (+1.96)
-
-#3  Island Breeze  by Ziggy Tides
-    Score: 1.90 / 4.00
-    Reasons:
-      - energy 0.55 vs target 0.50 (+1.90)
-
-#4  Smoke and Rain  by Delta Hollow
-    Score: 1.90 / 4.00
-    Reasons:
-      - energy 0.45 vs target 0.50 (+1.90)
-
-#5  Midnight Coding  by LoRoom
-    Score: 1.84 / 4.00
-    Reasons:
-      - energy 0.42 vs target 0.50 (+1.84)
-
-================================================================
-```
-
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
-
----
-
-## Experiments You Tried
-
-**1. Nine user profiles.** Three were ordinary: High-Energy Pop, Chill Lofi and Deep Intense Rock. They gave good lists. Six were tricky on purpose. They showed problems:
-
-- A "sad" request got cheerful songs. No song is labeled sad.
-- A metal fan who wanted quiet music got a loud metal song first.
-- Capital letters ("Pop") or an unknown genre ("k-pop") gave lists sorted by loudness only.
-- Gym Hero was in the top 5 for 5 of the 9 profiles.
-
-All nine outputs are shown above.
-
-**2. Weight shift.** I changed genre from 2.0 to 1.0. I changed energy from 1.0 to 2.0. Mood stayed at 1.0. The top score is still 4.0.
-
-The three ordinary profiles did not change. Two tricky profiles got a better #1 song:
-
-| Profile | Old #1 | New #1 |
-|---|---|---|
-| Genre-Only Trap (metal, chill, 0.2) | Iron Verdict (loud metal, 0.97) | Spacewalk Thoughts (quiet ambient, 0.28) |
-| Classical + Angry + 1.0 | Rainfall Nocturne (quiet classical, 0.22) | Iron Verdict (loud, angry) |
-
-So the genre weight matters a lot when a user's wishes conflict. It matters little when they agree. I kept the new weights.
-
-**3. Clamping energy to 0–1.** After doubling energy, an energy of 2.0 gave negative points. One top-5 song scored below zero. Clamping fixed it.
-
-I then tested the math with 880 scores. I used extreme energies, odd genre text and all 20 songs. Every score stayed between 0 and 4. A perfect match scored exactly 4.0. The two existing tests still passed.
-
-**4. A bias check across the song list.** I ran 399 recommendations. I used every genre and mood pair at 21 energy levels.
-
-- Every song could show up.
-- Songs in the busy low-energy group showed up about 3 times more than songs at the edges. Library Rain showed up 189 times. Wildflower Road showed up 54 times.
-- A listener who wants energy 0.0 can earn at most 1.56 of 2.0 energy points. The quietest song is 0.22.
-- The `likes_acoustic` setting is never used in scoring.
-
-**Not tried yet.** Adding tempo or valence to the score. Removing the mood check.
-
----
-
-## Limitations and Risks
-
-- **Tiny song list.** There are only 20 songs. 15 of the 17 genres have one song. A listener with a rare taste gets one genre match. The rest are picked by energy only.
-- **Uneven energy.** No song has energy between 0.55 and 0.75. The quietest is 0.22. Some listeners get weaker matches.
-- **Exact-match labels.** "indie pop" gets nothing for a pop fan. "Pop" with a capital letter matches nothing. A mood like "sad" is ignored if it is not in the list.
-- **Unused data.** Valence, tempo, danceability and acousticness are never scored. The `likes_acoustic` setting is dropped. That is why Gym Hero keeps showing up for happy pop fans.
-- **No variety.** The result is the same every time. One artist can take two of the five slots.
-- **No input checks.** Typos and unknown genres give normal-looking lists. There is no warning. Only energy is clamped.
-- **No lyrics, language or sound.** The system does not know what a song sounds like.
-
-The model card has more detail.
-
----
+**What I have not tested.** The model's own wording has not been run against a real model, because the evaluation and sample outputs here were produced without an API key. "Repeat runs give the same result" is trivially true offline, so it only becomes a real test with `--live`. The 60 newest topic x virtue entries and 348 activities are AI-drafted and have not been reviewed line by line.
 
 ## Reflection
 
-Full write-up:
+This project taught me to build the deterministic part first and to give the model a narrow job. Once the data, the ranking and the guardrails worked on their own, the model became an optional improvement instead of a risk, and I could see exactly what each part contributed. It also taught me that evaluation changes what you build: the cases I wrote after the first version exposed the matching and noise problems, and I would not have found them by reading the code. Finally, working with a table of AI-drafted content made clear how much of "AI quality" is really data quality, and that someone has to review it.
 
-[**Model Card**](model_card.md)
+My responsible-AI reflection, covering how I worked with AI, a suggestion I accepted and one I rejected or revised, and the system's limitations, is in [model_card.md](model_card.md).
 
-A recommender turns data into guesses. It compares what a user says to the labels and numbers on each song. It adds up points and sorts the songs. I learned that I make many of the choices by hand. Changing two weights changed the top song for two of my test profiles. Also, the lists looked fine even when the system misread the request. A score of 1.9 out of 4 looked normal. But it only measured loudness.
+## Project layout
 
-Bias showed up in places I did not expect. It was not mostly about which genre was favored. It came from the song list. No songs fall between 0.55 and 0.75 energy, and none are quieter than 0.22. It came from exact-match labels. "indie pop" and "pop" count as different words. It also came from data the system never uses. People with rare genres, odd moods or ignored settings get worse lists. Nothing tells them. A real app should say when it can't find a match. It should also be tested on unusual listeners, not just typical ones.
+```
+VirtueWeave/
+├── data/            virtues.csv, virtue_fit.csv, activities.csv
+├── src/             catalog, retrieval, pipeline, explainer, llm, evaluate, main
+├── static/          the website (index.html, style.css, app.js)
+├── tests/           87 automated tests
+├── assets/          flowchart.mmd (the diagram above)
+├── server.py        the web server
+└── traces/          one JSON trace per run, plus feedback.jsonl (git-ignored)
+```

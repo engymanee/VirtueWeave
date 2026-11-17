@@ -4,28 +4,23 @@ import pytest
 from fastapi.testclient import TestClient
 
 import server
+from src.llm import LLMUnavailable
 
-SENTENCE = "Teaching loops to my 6-year-olds tomorrow, 15 minutes, they keep giving up."
+BODY = {"topic": "loops", "grade": "1", "minutes": 15, "note": "they keep giving up"}
 
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "TRACE_DIR", tmp_path / "traces")
-    # Make every model call fail so the test never touches the network.
-    import src.llm
-    def down(*a, **k):
-        raise src.llm.LLMUnavailable("test")
-    monkeypatch.setattr("src.pipeline.call_json", down, raising=False)
-    monkeypatch.setattr(server, "run_pipeline",
-                        lambda *a, **k: _run(*a, **k, model_call=down))
+    real = server.run_pipeline
+
+    def offline(*args, **kwargs):          # never touch the network in tests
+        def down(system, user, schema):
+            raise LLMUnavailable("test")
+        return real(*args, **kwargs, model_call=down)
+
+    monkeypatch.setattr(server, "run_pipeline", offline)
     return TestClient(server.app)
-
-
-_real_run = server.run_pipeline
-
-
-def _run(*args, **kwargs):
-    return _real_run(*args, **kwargs)
 
 
 def test_home_page_and_static_files_are_served(client):
@@ -34,37 +29,50 @@ def test_home_page_and_static_files_are_served(client):
     assert client.get("/static/style.css").status_code == 200
 
 
-def test_ask_returns_virtue_cards_with_practices_and_steps(client):
-    body = client.post("/api/ask", json={"sentence": SENTENCE}).json()
-    assert body["ok"] and body["understood"]["topic"] == "loops"
-    assert body["virtues"][0]["virtue"] == "perseverance"
-    practice = body["virtues"][0]["practices"][0]
-    assert practice["reasons"] and practice["sources"]
-    assert [s["step"] for s in body["steps"]][0] == "guard_input"
+def test_catalog_lists_what_the_form_offers(client):
+    body = client.get("/api/catalog").json()
+    assert len(body["topics"]) == 12 and "loops" in body["topics"]
+    assert body["grades"][0] == "K" and body["grades"][-1] == "12"
+    assert len(body["virtues"]) == 8 and body["pairs"] == 96 and body["activities"] == 384
+
+
+def test_recommend_returns_three_virtues_with_activities(client):
+    body = client.post("/api/recommend", json=BODY).json()
+    assert body["ok"] and body["request"]["band"] == "K-2"
+    assert len(body["virtues"]) == 3 and body["virtues"][0]["virtue"] == "perseverance"
+    first = body["virtues"][0]
+    assert first["fits"] and first["title"] and first["activity"] and first["minutes"] == 15
+    assert not {"reasons", "sources"} & set(first) and "steps" not in body
+    assert first["written_by_model"] is False        # model was offline, catalog text shown
     assert body["trace_id"].startswith("run-")
 
 
-def test_blocked_sentence_gives_a_message_not_an_error(client):
-    body = client.post("/api/ask", json={"sentence": "   "}).json()
+def test_blocked_input_gives_a_message_not_an_error(client):
+    body = client.post("/api/recommend", json={**BODY, "topic": "nope"}).json()
     assert body["ok"] is False and body["message"] and body["virtues"] == []
 
 
-def test_overlong_body_is_rejected(client):
-    assert client.post("/api/ask", json={"sentence": "x" * 2001}).status_code == 422
+@pytest.mark.parametrize("payload", [
+    {**BODY, "minutes": "soon"},
+    {**BODY, "note": "x" * 2001},
+    {"topic": "loops"},
+])
+def test_malformed_requests_are_rejected(client, payload):
+    assert client.post("/api/recommend", json=payload).status_code == 422
 
 
 def test_feedback_is_recorded(client):
-    trace_id = client.post("/api/ask", json={"sentence": SENTENCE}).json()["trace_id"]
-    ok = client.post("/api/feedback",
-                     json={"trace_id": trace_id, "practice_id": 7, "decision": "accept"})
+    trace_id = client.post("/api/recommend", json=BODY).json()["trace_id"]
+    ok = client.post("/api/feedback", json={"trace_id": trace_id, "virtue": "perseverance", "decision": "accept"})
     assert ok.status_code == 200
     lines = (server.TRACE_DIR / "feedback.jsonl").read_text().splitlines()
-    assert json.loads(lines[0])["decision"] == "accept"
+    assert json.loads(lines[0])["decision"] == "accept" and json.loads(lines[0])["virtue"] == "perseverance"
 
 
 @pytest.mark.parametrize("payload", [
-    {"trace_id": "../../etc/passwd", "practice_id": 1, "decision": "accept"},
-    {"trace_id": "run-20260101-000000-abcdef12", "practice_id": 1, "decision": "maybe"},
+    {"trace_id": "../../etc/passwd", "virtue": "justice", "decision": "accept"},
+    {"trace_id": "run-20260101-000000-abcdef12", "virtue": "justice", "decision": "maybe"},
+    {"trace_id": "run-20260101-000000-abcdef12", "virtue": "Not A Virtue!", "decision": "accept"},
 ])
 def test_bad_feedback_is_rejected(client, payload):
     assert client.post("/api/feedback", json=payload).status_code == 422

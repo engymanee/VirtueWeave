@@ -1,19 +1,21 @@
 """
 The whole VirtueWeave run in one function, run_pipeline(), and a JSON trace.
 
-The six steps, always in this order:
-  1. guard_input   rule checks on the teacher's sentence (blocked -> stop)
-  2. interpret     the model (or keyword parser) builds topic/age/minutes/description
-  3. retrieve      TF-IDF over notes and guides gives each virtue a retrieval score
-  4. rank          practices are scored, with a reason for every point
-  5. explain       the model words the reasons for the top picks
-  6. guard_output  checks the wording; if it fails, the scorer reasons are shown
+The teacher gives a topic, a grade and the minutes they have, and may add a
+short note about the class. The answer is the 3 virtues that fit best, each
+with how it fits the topic and an activity for that grade and time.
+
+The five steps, always in this order:
+  1. guard_input   check the fields and the note (blocked -> stop)
+  2. retrieve      TF-IDF over the catalog's text scores each virtue against the note
+  3. rank          fit + retrieval score each virtue, with a reason for every point
+  4. explain       the model words how each virtue fits (or the catalog's own text is shown)
+  5. guard_output  check the wording; if it fails, show the catalog text instead
 
 Every run writes one JSON file to the trace directory, including blocked runs
 and runs that crash, so a run can always be replayed from its trace.
 """
 
-import csv
 import json
 import re
 import time
@@ -23,19 +25,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from src.explainer import explain, guard_output, group_by_virtue
-from src.interpret import Interpretation, interpret, load_topics
+from src.catalog import Catalog, grade_to_band, load_catalog
+from src.explainer import explain, guard_output
 from src.llm import LLMUnavailable, call_json
 from src.retrieval import VirtueRetriever
 
 TOP_K = 3
 
-# Ranking points. A practice scores topic + fit + retrieval, each with its reason.
-TOPIC_POINTS = 2.0       # the practice's topic is the one the teacher named
+# Ranking points: a virtue scores its fit for the topic plus how well the note matches it.
 FIT_POINTS = 1.0         # times the catalog's fit value (0 to 1)
 RETRIEVAL_POINTS = 3.0   # times the virtue's retrieval score (0 to 1)
 
-MAX_INPUT_CHARS = 500
+MAX_NOTE_CHARS = 300
+MAX_MINUTES = 180
 
 INJECTION_PATTERNS = [
     r"ignore (?:all |any |the )?(?:previous|prior|above|earlier) (?:instructions|rules|prompts?)",
@@ -47,19 +49,33 @@ INJECTION_PATTERNS = [
 
 
 @dataclass
+class Request:
+    topic: str
+    grade: str
+    minutes: int
+    note: str = ""
+    band: str = ""          # filled in by guard_input
+
+
+@dataclass
 class Pick:
-    practice: Dict[str, Any]
+    virtue: str
     score: float
+    fit: float
+    title: str
+    why: str                 # the catalog's own "how it fits" text
+    activity: str
+    activity_minutes: int
+    over_time: bool          # True if the activity is longer than the teacher's time
     reasons: List[str]
-    evidence: List[Dict[str, str]]          # {"source", "label", "text"}
+    evidence: List[Dict[str, str]]    # {"source", "label", "text"}
 
 
 @dataclass
 class RunResult:
     ok: bool
-    sentence: str
+    request: Optional[Request] = None
     message: str = ""                        # why the run stopped, if it did
-    interpretation: Optional[Interpretation] = None
     picks: List[Pick] = field(default_factory=list)
     explained: bool = False                  # True if the model's wording was shown
     virtue_explanations: Dict[str, str] = field(default_factory=dict)
@@ -68,189 +84,159 @@ class RunResult:
 
 # ------------------------------------------------------------------ step 1
 
-def guard_input(sentence: str) -> Optional[str]:
-    """Returns a reason to block the sentence, or None if it is fine."""
-    text = sentence.strip()
-    if not text:
-        return "The sentence is empty. Describe your class in a sentence."
-    if len(text) > MAX_INPUT_CHARS:
-        return f"The sentence is {len(text)} characters; the limit is {MAX_INPUT_CHARS}."
-    if not any(ch.isalpha() for ch in text):
-        return "The sentence has no words in it."
-    lowered = text.lower()
+def guard_input(topic: Any, grade: Any, minutes: Any, note: Any, catalog: Catalog):
+    """Returns (request, None) if the input is fine, or (None, reason) to block it."""
+    topic_text = str(topic or "").strip().lower()
+    if topic_text not in catalog.topics:
+        return None, f"Choose one of the topics: {', '.join(catalog.topics)}."
+    try:
+        band = grade_to_band(grade)
+    except ValueError:
+        return None, "Choose a grade from K to 12."
+    if isinstance(minutes, bool):
+        return None, "Enter the minutes you have as a whole number."
+    try:
+        mins = int(minutes)
+    except (TypeError, ValueError):
+        return None, "Enter the minutes you have as a whole number."
+    if not 1 <= mins <= MAX_MINUTES:
+        return None, f"Minutes must be between 1 and {MAX_MINUTES}."
+
+    note_text = str(note or "").strip()
+    if len(note_text) > MAX_NOTE_CHARS:
+        return None, f"The note is {len(note_text)} characters; the limit is {MAX_NOTE_CHARS}."
+    lowered = note_text.lower()
     for pattern in INJECTION_PATTERNS:
         if re.search(pattern, lowered):
-            return "The sentence looks like an instruction to the assistant, not a classroom."
-    return None
+            return None, "The note looks like an instruction to the assistant, not a description of your class."
+    return Request(topic_text, str(grade).strip().upper(), mins, note_text, band), None
 
 
 # ------------------------------------------------------------------ step 3
 
-def retrieve(retriever: VirtueRetriever, interpretation: Interpretation) -> Dict:
-    """Retrieval score and evidence for every virtue."""
-    return retriever.match_virtues(interpretation.description)
-
-
-# ------------------------------------------------------------------ step 4
-
-def load_practices(practices_path: str) -> List[Dict[str, Any]]:
-    practices = []
-    with open(practices_path, newline="", encoding="utf-8") as f:
-        for row in csv.DictReader(f):
-            practices.append({
-                "id": int(row["id"]), "title": row["title"],
-                "virtue": row["virtue"].strip().lower(),
-                "topic": row["topic"].strip().lower(),
-                "fit": float(row["fit"]), "minutes": int(row["minutes"]),
-                "age_min": int(row["age_min"]), "age_max": int(row["age_max"]),
-            })
-    return practices
-
-
-def load_notes(notes_path: str) -> Dict[int, Dict[str, str]]:
-    with open(notes_path, newline="", encoding="utf-8") as f:
-        return {int(r["id"]): {"why": r["why"], "how": r["how"]} for r in csv.DictReader(f)}
-
-
-def rank(
-    practices: List[Dict[str, Any]],
-    interpretation: Interpretation,
-    matches: Dict,
-    notes: Dict[int, Dict[str, str]],
-    k: int = TOP_K,
-) -> List[Pick]:
+def rank(request: Request, catalog: Catalog, matches: Dict, k: int = TOP_K) -> List[Pick]:
     """
-    Scores each practice, drops those that don't fit the age or the time, and
-    returns the top k. Each reason names the points it earned.
+    Scores every virtue for the topic, puts those whose activity fits the time
+    first, and returns the top k. If fewer than k fit the time, the best of the
+    rest fill the list and are marked over_time.
     """
-    picks = []
-    for p in practices:
-        age, minutes = interpretation.age, interpretation.minutes
-        if age is not None and not p["age_min"] <= age <= p["age_max"]:
-            continue
-        if minutes is not None and p["minutes"] > minutes:
-            continue
+    candidates = []
+    for virtue in catalog.virtues:
+        pair = catalog.pairs[(request.topic, virtue)]
+        act = catalog.activity(request.topic, virtue, request.band)
+        score = FIT_POINTS * pair.fit
+        reasons = [f"fit {pair.fit:.1f} for {virtue} in {request.topic} (+{score:.2f})"]
 
-        reasons = []
-        score = 0.0
-        if interpretation.topic and p["topic"] == interpretation.topic:
-            score += TOPIC_POINTS
-            reasons.append(f"topic match: {p['topic']} (+{TOPIC_POINTS:.1f})")
-        earned = FIT_POINTS * p["fit"]
-        score += earned
-        reasons.append(f"catalog fit {p['fit']:.1f} for {p['virtue']} in {p['topic']} (+{earned:.2f})")
-
-        match = matches.get(p["virtue"])
-        if match is not None:
+        match = matches.get(virtue)
+        if match is not None and match.score > 0:
             earned = RETRIEVAL_POINTS * match.score
             score += earned
             if match.method == "tfidf":
-                detail = f"retrieval {match.score:.2f} for {p['virtue']} (text match)"
+                detail = f"your note matches {virtue}: retrieval {match.score:.2f}"
             elif match.method == "tfidf+cue-tags":
-                detail = (f"retrieval {match.score:.2f} for {p['virtue']} (text match and "
-                          f"cue tags: {', '.join(match.cue_hits)})")
+                detail = (f"your note matches {virtue}: retrieval {match.score:.2f} "
+                          f"(text and cue tags: {', '.join(match.cue_hits)})")
             else:
-                tags = ", ".join(match.cue_hits) or "none"
-                detail = f"cue tags for {p['virtue']}: {tags} ({match.score:.2f})"
+                detail = f"your note has cue tags for {virtue}: {', '.join(match.cue_hits)}"
             reasons.append(f"{detail} (+{earned:.2f})")
-        if age is not None:
-            reasons.append(f"ages {p['age_min']}-{p['age_max']} include {age}")
-        if minutes is not None:
-            reasons.append(f"{p['minutes']} min fits in {minutes} min")
 
-        evidence = []
-        note = notes.get(p["id"])
-        if note:
-            for key in ("why", "how"):
-                evidence.append({"source": "note", "label": f"{p['title']} ({key})", "text": note[key]})
+        over = act.minutes > request.minutes
+        if over:
+            reasons.append(f"activity takes {act.minutes} min, you have {request.minutes} min")
+        else:
+            reasons.append(f"activity takes {act.minutes} min, within your {request.minutes} min")
+
+        evidence = [
+            {"source": "why", "label": f"{pair.title} (why)", "text": pair.why},
+            {"source": "activity", "label": f"{pair.title} ({request.band} activity)", "text": act.text},
+            {"source": "guide", "label": f"{virtue.title()} guide", "text": catalog.virtues[virtue].guide},
+        ]
+        seen = {e["text"] for e in evidence}
         if match is not None:
-            seen = {e["text"] for e in evidence}
             for hit in match.evidence:
-                if hit.passage.text not in seen:
-                    evidence.append({
-                        "source": hit.passage.source,
-                        "label": hit.passage.label,
-                        "text": hit.passage.text,
-                    })
-        picks.append(Pick(p, score, reasons, evidence))
+                p = hit.passage
+                relevant = p.topic in (None, request.topic) and p.band in (None, request.band)
+                if relevant and p.text not in seen:
+                    seen.add(p.text)
+                    evidence.append({"source": p.source, "label": p.label, "text": p.text})
+        candidates.append(Pick(
+            virtue, score, pair.fit, pair.title, pair.why, act.text, act.minutes,
+            over, reasons, evidence))
 
-    picks.sort(key=lambda pick: (-pick.score, pick.practice["id"]))
-    return picks[:k]
+    order = list(catalog.virtues)
+    candidates.sort(key=lambda c: (c.over_time, -c.score, order.index(c.virtue)))
+    return candidates[:k]
 
 
 # ------------------------------------------------------------------ the run
 
 def run_pipeline(
-    sentence: str,
-    practices_path: str = "data/practices.csv",
-    notes_path: str = "data/notes.csv",
-    guides_path: Optional[str] = None,
+    topic: str,
+    grade: Any,
+    minutes: Any,
+    note: str = "",
+    data_dir: str = "data",
     trace_dir: str = "traces",
     model_call: Callable[..., Dict] = call_json,
     with_examples: bool = True,
 ) -> RunResult:
-    """Runs the six steps in order and writes a JSON trace of the run."""
+    """Runs the five steps in order and writes a JSON trace of the run."""
     run_id = uuid.uuid4().hex[:8]
     started = datetime.now(timezone.utc)
     steps: List[Dict[str, Any]] = []
-    result = RunResult(ok=False, sentence=sentence)
+    raw_input = {"topic": topic, "grade": grade, "minutes": minutes, "note": note}
+    result = RunResult(ok=False)
 
     def record(name: str, status: str, t0: float, **detail: Any) -> None:
         steps.append({"step": name, "status": status,
                       "ms": round((time.perf_counter() - t0) * 1000, 1), **detail})
 
     try:
+        catalog = load_catalog(data_dir)
+
         # 1. input guardrail
         t0 = time.perf_counter()
-        blocked = guard_input(sentence)
+        request, blocked = guard_input(topic, grade, minutes, note, catalog)
         if blocked:
             record("guard_input", "blocked", t0, reason=blocked)
             result.message = blocked
             return result
-        record("guard_input", "ok", t0)
+        result.request = request
+        record("guard_input", "ok", t0, **asdict(request))
 
-        # 2. interpret
+        # 2. retrieve (only if there is a note to match)
         t0 = time.perf_counter()
-        topics = load_topics(practices_path)
-        interpretation = interpret(sentence, topics, model_call)
-        result.interpretation = interpretation
-        record("interpret", "ok", t0, **asdict(interpretation))
-
-        # 3. retrieve
-        t0 = time.perf_counter()
-        retriever = VirtueRetriever.from_files(notes_path, practices_path, guides_path)
-        matches = retrieve(retriever, interpretation)
-        record("retrieve", "ok", t0, query=interpretation.description, virtues={
-            v: {"score": round(m.score, 3), "method": m.method,
-                "evidence": [h.passage.label for h in m.evidence]}
-            for v, m in matches.items()
+        matches: Dict = {}
+        if request.note:
+            matches = VirtueRetriever.from_catalog(catalog).match_virtues(request.note)
+        record("retrieve", "ok" if matches else "skipped", t0, query=request.note, virtues={
+            v: {"score": round(m.score, 3), "method": m.method, "cue_tags": m.cue_hits}
+            for v, m in matches.items() if m.score > 0
         })
 
-        # 4. rank
+        # 3. rank
         t0 = time.perf_counter()
-        picks = rank(load_practices(practices_path), interpretation, matches,
-                     load_notes(notes_path))
+        picks = rank(request, catalog, matches)
         result.picks = picks
-        record("rank", "ok" if picks else "empty", t0, picks=[
-            {"id": p.practice["id"], "title": p.practice["title"],
-             "score": round(p.score, 3), "reasons": p.reasons} for p in picks
+        record("rank", "ok", t0, picks=[
+            {"virtue": p.virtue, "score": round(p.score, 3), "title": p.title,
+             "minutes": p.activity_minutes, "over_time": p.over_time, "reasons": p.reasons}
+            for p in picks
         ])
-        if not picks:
-            result.message = "No practice fits that age and time. Try a longer lesson or a different age."
-            return result
 
-        # 5. explain (two or three sentences per virtue)
+        # 4. explain (two or three sentences per virtue)
         t0 = time.perf_counter()
         explanations: Dict[str, str] = {}
         explain_error = None
+        guides = {v: info.guide for v, info in catalog.virtues.items()}
         try:
-            explanations = explain(sentence, picks, matches, model_call, with_examples)
+            explanations = explain(request, picks, guides, model_call, with_examples)
             record("explain", "ok", t0, with_examples=with_examples, explanations=explanations)
         except (LLMUnavailable, ValueError) as error:
             explain_error = str(error)
             record("explain", "failed", t0, reason=explain_error)
 
-        # 6. output guardrail
+        # 5. output guardrail
         t0 = time.perf_counter()
         if explain_error:
             record("guard_output", "skipped", t0, reason="no explanation to check")
@@ -271,11 +257,11 @@ def run_pipeline(
         result.message = f"The run failed: {error}"
         raise
     finally:
-        result.trace_path = _write_trace(trace_dir, run_id, started, sentence, steps, result)
+        result.trace_path = _write_trace(trace_dir, run_id, started, raw_input, steps, result)
 
 
 def _write_trace(
-    trace_dir: str, run_id: str, started: datetime, sentence: str,
+    trace_dir: str, run_id: str, started: datetime, raw_input: Dict[str, Any],
     steps: List[Dict[str, Any]], result: RunResult,
 ) -> str:
     folder = Path(trace_dir)
@@ -284,11 +270,11 @@ def _write_trace(
     trace = {
         "run_id": run_id,
         "started": started.isoformat(),
-        "input": sentence,
+        "input": raw_input,
         "ok": result.ok,
         "message": result.message,
         "shown": "model explanation" if result.explained else
-                 ("scorer reasons only" if result.picks else "nothing"),
+                 ("catalog text only" if result.picks else "nothing"),
         "steps": steps,
     }
     path.write_text(json.dumps(trace, indent=2, default=str), encoding="utf-8")
@@ -297,31 +283,28 @@ def _write_trace(
 
 # ------------------------------------------------------------------ display
 
+def fit_text(pick: Pick, result: RunResult) -> str:
+    """The "how it fits" paragraph: the model's wording if it passed, else the catalog's text."""
+    return result.virtue_explanations.get(pick.virtue) or pick.why
+
+
 def format_result(result: RunResult) -> str:
     """Plain-text answer for the terminal."""
     if not result.ok or not result.picks:
         return result.message or "No result."
-    i = result.interpretation
+    r = result.request
     lines = [
-        f"Topic: {i.topic or 'not found'} | age: {i.age or '?'} | minutes: {i.minutes or '?'} "
-        f"| read by: {i.source}",
-        f"Situation: {i.description}",
+        f"Topic: {r.topic} | grade {r.grade} ({r.band}) | {r.minutes} min"
+        + (f" | note: {r.note}" if r.note else ""),
         "",
     ]
     if not result.explained:
-        lines.append("(Showing scoring reasons only.)\n")
-    rank_no = 0
-    for virtue, group in group_by_virtue(result.picks).items():
-        if result.explained:
-            lines.append(f"{virtue.title()}: {result.virtue_explanations[virtue]}")
-        for pick in group:
-            rank_no += 1
-            p = pick.practice
-            lines.append(f"  #{rank_no}  {p['title']}  ({p['virtue']}, {p['topic']}, {p['minutes']} min, "
-                         f"ages {p['age_min']}-{p['age_max']})  score {pick.score:.2f}")
-            if not result.explained:
-                lines.extend(f"      - {reason}" for reason in pick.reasons)
-            lines.append("      Sources: " + "; ".join(e["label"] for e in pick.evidence))
+        lines.append("(Showing the catalog's own text; the written note was unavailable.)\n")
+    for n, pick in enumerate(result.picks, start=1):
+        flag = f"  [runs {pick.activity_minutes} min, over your {r.minutes}]" if pick.over_time else ""
+        lines.append(f"#{n}  {pick.virtue.title()}  (score {pick.score:.2f})")
+        lines.append(f"    How it fits: {fit_text(pick, result)}")
+        lines.append(f"    Try \"{pick.title}\" ({pick.activity_minutes} min){flag}: {pick.activity}")
         lines.append("")
     lines.append(f"Trace: {result.trace_path}")
     return "\n".join(lines)
