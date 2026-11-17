@@ -6,7 +6,7 @@ import pytest
 from src.agent_demo import run_demo
 from src.compare_specialization import measure, render_markdown, run_comparison
 from src.docs_section import replace_section
-from src.llm import LLMUnavailable
+from src.llm import unavailable
 from helpers import GOOD, Script
 
 
@@ -39,12 +39,9 @@ def test_agent_demo_saves_real_traces_and_the_readable_log(data_dir, tmp_path):
 
 
 def test_agent_demo_writes_nothing_if_the_agent_cannot_run(data_dir, tmp_path):
-    def down(system, messages, tools):
-        raise LLMUnavailable("no key")
-
     doc = tmp_path / "ai.md"
     with pytest.raises(SystemExit, match="Nothing was written"):
-        run_demo(DEMO, tool_call=down, out_dir=str(tmp_path / "traces"), doc_path=str(doc),
+        run_demo(DEMO, tool_call=unavailable, out_dir=str(tmp_path / "traces"), doc_path=str(doc),
                  data_dir=data_dir, trace_dir=str(tmp_path / "t"))
     assert not doc.exists()
     assert not (tmp_path / "traces").exists()        # no folder is created either
@@ -75,11 +72,8 @@ def test_specialization_compares_the_same_picks_with_and_without_examples(data_d
 
 
 def test_specialization_writes_nothing_if_the_model_is_down(data_dir, tmp_path):
-    def down(system, user, schema):
-        raise LLMUnavailable("no key")
-
     with pytest.raises(SystemExit, match="Nothing was written"):
-        run_comparison(down, SMALL[:1], data_dir=data_dir, trace_dir=str(tmp_path))
+        run_comparison(unavailable, SMALL[:1], data_dir=data_dir, trace_dir=str(tmp_path))
 
 
 def test_measures():

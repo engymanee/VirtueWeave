@@ -259,7 +259,7 @@ def run_pipeline(
         t0 = time.perf_counter()
         explanations: Dict[str, str] = {}
         explain_error = None
-        guides = {v: info.guide for v, info in catalog.virtues.items()}
+        guides = catalog.guides()
         try:
             explanations = explain(request, picks, guides, model_call, with_examples)
             record("explain", "ok", t0, with_examples=with_examples, explanations=explanations)

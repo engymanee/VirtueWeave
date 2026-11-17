@@ -17,7 +17,7 @@ from typing import Any, Callable, Dict, List
 from src.catalog import load_catalog
 from src.docs_section import replace_section
 from src.explainer import count_sentences, explain, guard_output
-from src.llm import LLMUnavailable, call_json
+from src.llm import LLMUnavailable, call_json, unavailable
 from src.pipeline import run_pipeline
 from src.retrieval import _tokens
 
@@ -31,10 +31,6 @@ REQUESTS = [
     {"topic": "patterns", "grade": "K", "minutes": 10, "note": ""},
     {"topic": "algorithms", "grade": "11", "minutes": 30, "note": "they rush and skip steps"},
 ]
-
-
-def _offline(system: str, user: str, schema: Dict) -> Dict:
-    raise LLMUnavailable("offline")
 
 
 def measure(explanations: Dict[str, str], picks: List[Any], note: str) -> Dict[str, Any]:
@@ -58,11 +54,11 @@ def run_comparison(
     data_dir: str = "data",
     trace_dir: str = "traces",
 ) -> Dict[str, Any]:
-    guides = {v: i.guide for v, i in load_catalog(data_dir).virtues.items()}
+    guides = load_catalog(data_dir).guides()
     rows = []
     for req in requests:
         base = run_pipeline(req["topic"], req["grade"], req["minutes"], req["note"],
-                            data_dir=data_dir, trace_dir=trace_dir, model_call=_offline)
+                            data_dir=data_dir, trace_dir=trace_dir, model_call=unavailable)
         row = {"request": req}
         for label, with_examples in (("baseline", False), ("few_shot", True)):
             try:

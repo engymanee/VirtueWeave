@@ -66,6 +66,10 @@ class Catalog:
     def activity(self, topic: str, virtue: str, band: str) -> Activity:
         return self.activities[(topic, virtue, band)]
 
+    def guides(self) -> Dict[str, str]:
+        """Each virtue's guide text, by virtue name."""
+        return {name: info.guide for name, info in self.virtues.items()}
+
 
 def _rows(path: Path) -> List[Dict[str, str]]:
     with open(path, newline="", encoding="utf-8") as f:

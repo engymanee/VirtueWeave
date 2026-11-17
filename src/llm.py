@@ -27,6 +27,11 @@ class LLMUnavailable(Exception):
     """The model could not give a usable JSON answer. The message says why."""
 
 
+def unavailable(*args: Any, **kwargs: Any) -> Any:
+    """A stand-in for the model that always fails. Used for offline runs and in tests."""
+    raise LLMUnavailable("the model is switched off")
+
+
 def _send(client: Optional[Any], **request: Any) -> Any:
     """Sends one request and turns every failure into LLMUnavailable."""
     try:

@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import server
-from src.llm import LLMUnavailable
+from src.llm import unavailable
 
 BODY = {"topic": "loops", "grade": "1", "minutes": 15, "note": "they keep giving up"}
 
@@ -15,9 +15,7 @@ def client(tmp_path, monkeypatch):
     real = server.run_pipeline
 
     def offline(*args, **kwargs):          # never touch the network in tests
-        def down(system, user, schema):
-            raise LLMUnavailable("test")
-        return real(*args, **kwargs, model_call=down)
+        return real(*args, **kwargs, model_call=unavailable)
 
     monkeypatch.setattr(server, "run_pipeline", offline)
     return TestClient(server.app)

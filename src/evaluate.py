@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from src.catalog import grade_to_band, load_catalog
-from src.llm import LLMUnavailable, call_json
+from src.llm import call_json, unavailable
 from src.pipeline import RunResult, rank, run_pipeline
 
 
@@ -74,10 +74,6 @@ CASES: List[Case] = [
     Case("guard: bad model wording", "guardrail", "loops", "1", 15,
          "they keep giving up", expect="output-fallback"),
 ]
-
-
-def _offline_model(system: str, user: str, schema: Dict) -> Dict:
-    raise LLMUnavailable("offline evaluation")
 
 
 def _bad_wording_model(system: str, user: str, schema: Dict) -> Dict:
@@ -176,7 +172,7 @@ def run_evaluation(
     out_dir: str = "traces",
     data_dir: str = "data",
 ) -> Dict[str, Any]:
-    model_call = call_json if live else _offline_model
+    model_call = call_json if live else unavailable
     catalog = load_catalog(data_dir)
     with tempfile.TemporaryDirectory() as scratch:   # per-run traces are not kept
         rows = [evaluate_case(c, model_call, repeats, scratch, data_dir, catalog) for c in CASES]

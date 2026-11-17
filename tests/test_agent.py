@@ -4,7 +4,7 @@ import pytest
 
 from src.agent import TOOLS, run_agent
 from src.catalog import load_catalog
-from src.llm import LLMUnavailable
+from src.llm import LLMUnavailable, unavailable
 from src.pipeline import Request, run_pipeline
 from src.retrieval import VirtueRetriever
 from helpers import GOOD, Script, reply, say, use
@@ -135,22 +135,15 @@ def test_no_note_means_the_search_tool_finds_nothing(setup):
 def test_a_model_failure_propagates_so_the_caller_can_fall_back(setup):
     catalog, request, retriever = setup
 
-    def down(system, messages, tools):
-        raise LLMUnavailable("down")
-
     with pytest.raises(LLMUnavailable):
-        run_agent(request, catalog, retriever, down)
+        run_agent(request, catalog, retriever, unavailable)
 
 
 # ------------------------------------------------------------- in the pipeline
 
-def explain_down(system, user, schema):
-    raise LLMUnavailable("explain off")
-
-
 def test_pipeline_agent_mode_uses_the_agents_choice_and_records_its_trace(data_dir, tmp_path):
     result = run_pipeline("loops", "3", 20, "they argue over turns", data_dir=data_dir,
-                          trace_dir=str(tmp_path / "t"), model_call=explain_down,
+                          trace_dir=str(tmp_path / "t"), model_call=unavailable,
                           agent=True, tool_call=Script(*GOOD))
     assert [p.virtue for p in result.picks] == ["justice", "teamwork", "perseverance"]
     assert result.agent["used"] and result.agent["overlap"] in (2, 3)
@@ -163,18 +156,15 @@ def test_pipeline_agent_mode_uses_the_agents_choice_and_records_its_trace(data_d
 
 
 def test_pipeline_agent_mode_falls_back_to_the_scorer_when_the_model_is_down(data_dir, tmp_path):
-    def down(system, messages, tools):
-        raise LLMUnavailable("no key")
-
     result = run_pipeline("loops", "3", 20, "", data_dir=data_dir, trace_dir=str(tmp_path / "t"),
-                          model_call=explain_down, agent=True, tool_call=down)
+                          model_call=unavailable, agent=True, tool_call=unavailable)
     assert result.ok and [p.virtue for p in result.picks] == ["perseverance", "teamwork", "justice"]
-    assert result.agent == {"used": False, "fallback_reason": "model unavailable: no key"}
+    assert result.agent == {"used": False, "fallback_reason": "model unavailable: the model is switched off"}
 
 
 def test_pipeline_agent_mode_falls_back_when_the_agent_never_submits(data_dir, tmp_path):
     result = run_pipeline("loops", "3", 20, "", data_dir=data_dir, trace_dir=str(tmp_path / "t"),
-                          model_call=explain_down, agent=True,
+                          model_call=unavailable, agent=True,
                           tool_call=Script(reply(say("Done."))))
     assert result.agent["used"] is False and "without submitting" in result.agent["fallback_reason"]
     assert [p.virtue for p in result.picks] == ["perseverance", "teamwork", "justice"]
@@ -182,7 +172,7 @@ def test_pipeline_agent_mode_falls_back_when_the_agent_never_submits(data_dir, t
 
 def test_scorer_mode_is_unchanged_and_has_no_agent_step(data_dir, tmp_path):
     result = run_pipeline("loops", "3", 20, "", data_dir=data_dir, trace_dir=str(tmp_path / "t"),
-                          model_call=explain_down)
+                          model_call=unavailable)
     assert result.agent is None
     steps = [s["step"] for s in json.load(open(result.trace_path))["steps"]]
     assert "agent" not in steps

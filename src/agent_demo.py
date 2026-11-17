@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from src.docs_section import replace_section
-from src.llm import LLMUnavailable
+from src.llm import unavailable
 from src.pipeline import run_pipeline
 
 REQUESTS = [
@@ -23,10 +23,6 @@ REQUESTS = [
     {"topic": "debugging", "grade": "9", "minutes": 30, "note": "some blame their partner when it breaks"},
     {"topic": "patterns", "grade": "K", "minutes": 5, "note": ""},
 ]
-
-
-def _explain_off(system: str, user: str, schema: Dict) -> Dict:
-    raise LLMUnavailable("not needed for the agent demo")
 
 
 def run_demo(
@@ -44,7 +40,7 @@ def run_demo(
     for number, req in enumerate(requests, start=1):
         result = run_pipeline(req["topic"], req["grade"], req["minutes"], req["note"],
                               data_dir=data_dir, trace_dir=trace_dir,
-                              model_call=_explain_off, agent=True, **extra)
+                              model_call=unavailable, agent=True, **extra)
         if not (result.agent and result.agent["used"]):
             reason = result.agent["fallback_reason"] if result.agent else "agent mode was not run"
             raise SystemExit(f"Stopped: the agent did not run ({reason}). Nothing was written.")

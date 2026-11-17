@@ -4,7 +4,7 @@ import json
 import pytest
 
 from src.catalog import load_catalog
-from src.llm import LLMUnavailable
+from src.llm import LLMUnavailable, unavailable
 from src.pipeline import format_result, guard_input, rank, run_pipeline
 
 GOOD = "This fits your topic well. It also suits the grade and the time you have."
@@ -187,10 +187,8 @@ def test_a_crash_is_traced_then_raised(data_dir, tmp_path):
 # --------------------------------------------------------------- the real data
 
 def test_real_catalog_runs_offline_for_every_topic_and_band(tmp_path):
-    def down(system, user, schema):
-        raise LLMUnavailable("offline")
     cat = load_catalog("data")
     for topic in cat.topics:
         for grade in ("K", "4", "7", "11"):
-            result = run_pipeline(topic, grade, 20, "", trace_dir=str(tmp_path / "t"), model_call=down)
+            result = run_pipeline(topic, grade, 20, "", trace_dir=str(tmp_path / "t"), model_call=unavailable)
             assert result.ok and len({p.virtue for p in result.picks}) == 3
