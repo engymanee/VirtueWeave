@@ -144,11 +144,27 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="penalize repeat artists and genres so the top 5 is more varied",
     )
+    parser.add_argument(
+        "--ask",
+        metavar="SENTENCE",
+        help="describe your class in one sentence and get the top 3 practices "
+             "(writes a JSON trace to traces/)",
+    )
     return parser.parse_args()
+
+
+def ask(sentence: str) -> None:
+    """Runs the six-step pipeline for one teacher sentence and prints the answer."""
+    from src.pipeline import format_result, run_pipeline
+
+    print(format_result(run_pipeline(sentence)))
 
 
 def main() -> None:
     args = parse_args()
+    if args.ask is not None:
+        ask(args.ask)
+        return
     songs = load_songs("data/songs.csv")
 
     if args.mode == "all":

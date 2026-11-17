@@ -1,0 +1,19 @@
+flowchart TD
+    A[Teacher describes a situation] --> B{Input guardrail}
+    B -- blocked --> X[Stop with a message]
+    B -- ok --> C[Interpret: model builds a profile]
+    C --> D{Profile valid?}
+    D -- no --> E[Keyword fallback profile]
+    D -- yes --> F[Retrieve candidates]
+    E --> F
+    N[(Practice notes)] --> F
+    G[(Virtue guides)] --> F
+    F --> H[Rank with scorer and reasons]
+    P[(practices.csv)] --> H
+    H --> I[Explain: model words the reasons]
+    I --> J{Output guardrail}
+    J -- fail --> K[Show scorer reasons only]
+    J -- pass --> L[Top 3 with reasons and sources]
+    K --> L
+    L --> M[Teacher accepts or rejects]
+    L --> T[(Trace log)]
