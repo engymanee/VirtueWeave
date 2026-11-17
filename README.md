@@ -131,6 +131,12 @@ These three runs were produced with the command line **without an API key**, so 
 **1. Loops, grade 1, 15 minutes, note: "they keep giving up"**
 
 ```
+$ python3 -m src.main --topic loops --grade 1 --minutes 15 --note "they keep giving up"
+
+Topic: loops | grade 1 (K-2) | 15 min | note: they keep giving up
+
+(Showing the catalog's own text; the written note was unavailable.)
+
 #1  Perseverance  (score 1.90)
     How it fits: A loop repeats the same small effort until the goal is reached.
     Try "The Cat That Kept Trying" (15 min): Children use a Repeat block to move a character a little each time until it arrives, and tell the story of not giving up.
@@ -147,6 +153,12 @@ These three runs were produced with the command line **without an API key**, so 
 **2. Debugging, grade 9, 30 minutes, note: "some blame their partner when it breaks"**
 
 ```
+$ python3 -m src.main --topic debugging --grade 9 --minutes 30 --note "some blame their partner when it breaks"
+
+Topic: debugging | grade 9 (9-12) | 30 min | note: some blame their partner when it breaks
+
+(Showing the catalog's own text; the written note was unavailable.)
+
 #1  Honesty  (score 1.30)
     How it fits: Fixing a bug starts with saying plainly what went wrong.
     Try "I Found My Bug" (30 min): Students write a candid post-mortem of a bug they caused, covering cause, impact and fix.
@@ -160,11 +172,16 @@ These three runs were produced with the command line **without an API key**, so 
     Try "Bug Hunt Try Again" (30 min): Students tackle a hard bug with a documented hypothesis-and-test cycle and reflect on staying with the problem.
 ```
 
-The note about blaming moved Honesty to the top. Without a note, Perseverance would lead for debugging.
 
 **3. Patterns, kindergarten, 5 minutes, no note**
 
 ```
+$ python3 -m src.main --topic patterns --grade K --minutes 5
+
+Topic: patterns | grade K (K-2) | 5 min
+
+(Showing the catalog's own text; the written note was unavailable.)
+
 #1  Honesty  (score 0.60)
     How it fits: A pattern is only useful if we describe what we really see.
     Try "Say What You See" (5 min): Children describe an object's features exactly before deciding where it goes.
@@ -179,6 +196,18 @@ The note about blaming moved Honesty to the top. Without a note, Perseverance wo
 ```
 
 Only one activity fits in five minutes, so it comes first. The other two are shown with a clear warning that they run longer than the time available.
+
+### What retrieval changes
+
+Without a note, the ranking uses only the table's fit scores. With a note, the retrieval step matches it against the guides, the "why it fits" notes and the activities, and the matching virtues move up. The same three lessons, run with and without a note (real outputs, top three in order):
+
+| Lesson | Without a note | The note | With the note |
+|---|---|---|---|
+| debugging, grade 9, 30 min | Perseverance > Honesty > Curiosity | "some blame their partner when it breaks" | Honesty > Teamwork > Perseverance |
+| pair programming, grade 7, 20 min | Teamwork > Service > Justice | "they argue over who gets the keyboard" | Justice > Teamwork > Service |
+| conditionals, grade 2, 10 min | Justice > Compassion > Curiosity | "a few kids tease classmates who get it wrong" | Compassion > Justice > Curiosity |
+
+In each case the virtue the note describes (blaming points to honesty, arguing over the keyboard to justice, teasing to compassion) moves to the top, which the table alone would not do.
 
 ## Design decisions and trade-offs
 
