@@ -27,7 +27,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 from src.catalog import Catalog, grade_to_band, load_catalog
 from src.explainer import explain, guard_output
-from src.llm import LLMUnavailable, call_json
+from src.agent import run_agent
+from src.llm import LLMUnavailable, call_json, call_with_tools
 from src.retrieval import VirtueRetriever
 
 TOP_K = 3
@@ -79,6 +80,7 @@ class RunResult:
     picks: List[Pick] = field(default_factory=list)
     explained: bool = False                  # True if the model's wording was shown
     virtue_explanations: Dict[str, str] = field(default_factory=dict)
+    agent: Optional[Dict[str, Any]] = None   # set in agent mode: what the agent did
     trace_path: Optional[str] = None
 
 
@@ -179,8 +181,14 @@ def run_pipeline(
     trace_dir: str = "traces",
     model_call: Callable[..., Dict] = call_json,
     with_examples: bool = True,
+    agent: bool = False,
+    tool_call: Callable[..., Any] = call_with_tools,
 ) -> RunResult:
-    """Runs the five steps in order and writes a JSON trace of the run."""
+    """
+    Runs the five steps in order and writes a JSON trace of the run. With
+    agent=True the model chooses the three virtues with tools (see src/agent.py),
+    falling back to the scorer's choice if it cannot.
+    """
     run_id = uuid.uuid4().hex[:8]
     started = datetime.now(timezone.utc)
     steps: List[Dict[str, Any]] = []
@@ -207,8 +215,10 @@ def run_pipeline(
         # 2. retrieve (only if there is a note to match)
         t0 = time.perf_counter()
         matches: Dict = {}
+        retriever = None
         if request.note:
-            matches = VirtueRetriever.from_catalog(catalog).match_virtues(request.note)
+            retriever = VirtueRetriever.from_catalog(catalog)
+            matches = retriever.match_virtues(request.note)
         record("retrieve", "ok" if matches else "skipped", t0, query=request.note, virtues={
             v: {"score": round(m.score, 3), "method": m.method, "cue_tags": m.cue_hits}
             for v, m in matches.items() if m.score > 0
@@ -216,13 +226,38 @@ def run_pipeline(
 
         # 3. rank
         t0 = time.perf_counter()
-        picks = rank(request, catalog, matches)
+        pool = rank(request, catalog, matches, k=len(catalog.virtues))
+        picks = pool[:TOP_K]
         result.picks = picks
         record("rank", "ok", t0, picks=[
             {"virtue": p.virtue, "score": round(p.score, 3), "title": p.title,
              "minutes": p.activity_minutes, "over_time": p.over_time, "reasons": p.reasons}
             for p in picks
         ])
+
+        # 3b. agent mode: the model chooses the three virtues with tools
+        if agent:
+            t0 = time.perf_counter()
+            scorer_top = [p.virtue for p in picks]
+            run, failure = None, None
+            try:
+                run = run_agent(request, catalog, retriever, tool_call)
+                failure = run.error
+            except LLMUnavailable as error:
+                failure = f"model unavailable: {error}"
+            if run is not None and run.virtues:
+                by_virtue = {p.virtue: p for p in pool}
+                picks = [by_virtue[v] for v in run.virtues]
+                for p in picks:
+                    p.reasons.append(f"chosen by the agent: {run.reasoning}")
+                result.picks = picks
+                result.agent = {"used": True, "reasoning": run.reasoning, "scorer_top3": scorer_top,
+                                "agent_top3": run.virtues,
+                                "overlap": len(set(scorer_top) & set(run.virtues))}
+                record("agent", "ok", t0, steps=run.steps, **result.agent)
+            else:
+                result.agent = {"used": False, "fallback_reason": failure}
+                record("agent", "failed", t0, reason=failure, steps=run.steps if run else [])
 
         # 4. explain (two or three sentences per virtue)
         t0 = time.perf_counter()
@@ -298,6 +333,14 @@ def format_result(result: RunResult) -> str:
         + (f" | note: {r.note}" if r.note else ""),
         "",
     ]
+    if result.agent:
+        if result.agent["used"]:
+            lines.append(f"(Chosen by the agent, which agrees with the scorer on "
+                         f"{result.agent['overlap']} of 3 virtues. Its reasoning: "
+                         f"{result.agent['reasoning']})\n")
+        else:
+            lines.append(f"(The agent was unavailable: {result.agent['fallback_reason']}. "
+                         f"Showing the scorer's choice.)\n")
     if not result.explained:
         lines.append("(Showing the catalog's own text; the written note was unavailable.)\n")
     for n, pick in enumerate(result.picks, start=1):

@@ -245,3 +245,9 @@ Things to look at by hand:
 - **Very narrow terminals.** Below about 66 columns the table cannot shrink further. The `Song` column does not wrap. At 60 columns the widest line was 66.
 - **Table is not the default.** I kept the list layout as the default so the sample output in the README and model card stays correct. Making the table the default is a small change, but those samples would then need regenerating.
 - **How it looks.** I checked the layout by reading the output. I should look at it in my own terminal.
+
+<!-- agent-traces:start -->
+## Project 4: agent workflow traces
+
+Agent mode lets the model choose the three virtues by calling tools (`get_topic_fits`, `search_class_notes`, `get_activity`, `submit_recommendation`), with a stated reason on every call. The code is in `src/agent.py`. **The saved traces have not been generated yet**, because they need a real model. Run `python3 -m src.agent_demo` with an API key and this section is replaced with the real traces, also saved in full as JSON in `assets/agent_traces/`.
+<!-- agent-traces:end -->

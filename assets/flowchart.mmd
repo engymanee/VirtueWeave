@@ -14,7 +14,12 @@ flowchart TD
     AC --> K
 
     K --> T3["Pick the top 3 virtues<br/>score = fit + note match<br/>activities that fit the time come first,<br/>longer ones are flagged"]
-    T3 --> E["Explain: the model writes 2-3 sentences<br/>per virtue on how it fits the topic"]
+    T3 --> M{"Agent mode on?"}
+    M -- no --> E
+    M -- yes --> AG["Agent: the model chooses the 3 virtues by calling tools<br/>topic fits, note search, activity check<br/>each step and reason is logged"]
+    AG -- unavailable or invalid --> E
+    AG --> E
+    E["Explain: the model writes 2-3 sentences<br/>per virtue on how it fits the topic"]
     E -- model unavailable --> H["Use the catalog's why-it-fits text"]
     E --> F{"Output guardrail<br/>right virtues, 2-3 sentences,<br/>short, no links"}
     F -- fail --> H

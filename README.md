@@ -39,7 +39,12 @@ flowchart TD
     AC --> K
 
     K --> T3["Pick the top 3 virtues<br/>score = fit + note match<br/>activities that fit the time come first,<br/>longer ones are flagged"]
-    T3 --> E["Explain: the model writes 2-3 sentences<br/>per virtue on how it fits the topic"]
+    T3 --> M{"Agent mode on?"}
+    M -- no --> E
+    M -- yes --> AG["Agent: the model chooses the 3 virtues by calling tools<br/>topic fits, note search, activity check<br/>each step and reason is logged"]
+    AG -- unavailable or invalid --> E
+    AG --> E
+    E["Explain: the model writes 2-3 sentences<br/>per virtue on how it fits the topic"]
     E -- model unavailable --> H["Use the catalog's why-it-fits text"]
     E --> F{"Output guardrail<br/>right virtues, 2-3 sentences,<br/>short, no links"}
     F -- fail --> H
@@ -56,6 +61,8 @@ flowchart TD
 4. **Explain.** One language-model call writes two or three warm sentences per virtue about how it fits the topic. The model is given the catalog's own text and the scorer's reasons, so it rewords facts it was handed and does not invent them. If the model is unavailable, the catalog's own "why it fits" text is shown.
 5. **Output guardrail.** Checks the model's wording: the right virtues, 2-3 sentences each, a length limit, no links. If it fails, the catalog text is shown instead.
 
+**Agent mode (optional).** With `--agent`, step 3 is done by the model instead of the formula. The agent works in steps by calling tools (`get_topic_fits`, `search_class_notes`, `get_activity`, then `submit_recommendation`), and every call carries its stated reason. Its choice is checked (exactly 3 distinct, real virtues) and compared with the scorer's, and if the model is unavailable or never submits a valid answer the scorer's choice is used. Every step is saved in the run's trace. The code is in `src/agent.py`.
+
 **The data** (`data/`):
 
 | File | Contents |
@@ -64,7 +71,7 @@ flowchart TD
 | `virtue_fit.csv` | 96 rows, one for every topic x virtue pair: a fit score (0-1), an activity title and a "why it fits" sentence |
 | `activities.csv` | 384 rows: one activity for every pair in each of four grade bands (K-2, 3-5, 6-8, 9-12), with its length in minutes |
 
-**The code** (`src/`): `catalog.py` loads and validates the data, `retrieval.py` is the TF-IDF index, `pipeline.py` is the pipeline, `explainer.py` is the model step and its guardrail, `llm.py` is the only place a model is called, `evaluate.py` is the evaluation, and `main.py` is the command line. `server.py` and `static/` are the website.
+**The code** (`src/`): `catalog.py` loads and validates the data, `retrieval.py` is the TF-IDF index, `pipeline.py` is the pipeline, `explainer.py` is the model step and its guardrail, `agent.py` is the optional tool-using agent, `llm.py` is the only place a model is called, `evaluate.py` is the evaluation, and `main.py` is the command line. `server.py` and `static/` are the website.
 
 ## Setup
 
@@ -101,10 +108,18 @@ Open http://localhost:8000, choose a topic, grade and minutes, and press **Recom
 python3 -m src.main --topic loops --grade 1 --minutes 15 --note "they keep giving up"
 ```
 
+**Try agent mode** (needs an API key)
+
+```bash
+python3 -m src.main --topic loops --grade 1 --minutes 15 --note "they keep giving up" --agent
+python3 -m src.agent_demo               # runs 3 examples and saves the traces to assets/agent_traces/ and ai_interactions.md
+python3 -m src.compare_specialization   # measures baseline vs few-shot wording and writes the table into model_card.md
+```
+
 **Run the tests and the evaluation**
 
 ```bash
-python3 -m pytest                     # 87 tests
+python3 -m pytest                     # 112 tests
 python3 -m src.evaluate               # 12-case evaluation, offline (no model calls)
 python3 -m src.evaluate --live        # same cases with the real model (costs money)
 ```
@@ -178,7 +193,7 @@ Only one activity fits in five minutes, so it comes first. The other two are sho
 
 ## Testing summary
 
-**What I built.** 87 automated tests cover the catalog checks, retrieval, the pipeline (including every guardrail and fallback path), the web API and the model wrapper. A separate 12-case evaluation (`src/evaluate.py`) runs the whole pipeline: 5 ordinary requests with the virtue that should come first, 2 vague notes that must not change the default order, and 5 guardrail cases (4 inputs that must be blocked, 1 where the model's wording is bad and the fallback must appear).
+**What I built.** 112 automated tests cover the catalog checks, retrieval, the pipeline (including every guardrail and fallback path), the web API and the model wrapper. A separate 12-case evaluation (`src/evaluate.py`) runs the whole pipeline: 5 ordinary requests with the virtue that should come first, 2 vague notes that must not change the default order, and 5 guardrail cases (4 inputs that must be blocked, 1 where the model's wording is bad and the fallback must appear).
 
 **Results (offline):** 12 of 12 cases pass. The expected virtue is first in 5 of 5 ordinary cases, there are 0 constraint violations (always 3 distinct virtues, the right grade band, correct time flags), and repeat runs give identical results.
 
@@ -203,9 +218,9 @@ My responsible-AI reflection, covering how I worked with AI, a suggestion I acce
 ```
 VirtueWeave/
 ├── data/            virtues.csv, virtue_fit.csv, activities.csv
-├── src/             catalog, retrieval, pipeline, explainer, llm, evaluate, main
+├── src/             catalog, retrieval, pipeline, agent, explainer, llm, evaluate, main
 ├── static/          the website (index.html, style.css, app.js)
-├── tests/           87 automated tests
+├── tests/           112 automated tests
 ├── assets/          flowchart.mmd (the diagram above)
 ├── server.py        the web server
 └── traces/          one JSON trace per run, plus feedback.jsonl (git-ignored)

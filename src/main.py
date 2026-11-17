@@ -21,12 +21,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--grade", required=True, choices=GRADES, help="K or 1 to 12")
     parser.add_argument("--minutes", required=True, type=int, help="minutes you have")
     parser.add_argument("--note", default="", help="optional: what is happening in your class")
+    parser.add_argument("--agent", action="store_true", help="let the model choose the virtues with tools (needs an API key)")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    print(format_result(run_pipeline(args.topic, args.grade, args.minutes, args.note)))
+    print(format_result(run_pipeline(args.topic, args.grade, args.minutes, args.note, agent=args.agent)))
 
 
 if __name__ == "__main__":
