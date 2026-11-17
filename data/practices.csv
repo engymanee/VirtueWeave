@@ -1,0 +1,37 @@
+id,title,virtue,topic,fit,minutes,age_min,age_max,cue_tags
+1,Steps to Help,service,algorithms,1.0,15,5,7,selfish|helpers|community|useful|for-others
+2,Steps for a Kind Act,compassion,algorithms,0.8,15,5,7,unkind|sad|upset|teasing|laughing-at|hurt
+3,Who Helped My Morning?,gratitude,algorithms,0.6,10,5,7,thank|ungrateful|grateful|entitled|taken-for-granted
+4,My Turn Your Turn,justice,sequencing,1.0,10,5,7,unfair|sharing|turns|arguing|left-out|fighting
+5,Fix the Order,perseverance,sequencing,0.8,10,5,7,frustrated|giving-up|stuck|quitting|crying|impatient
+6,Human Robot,teamwork,sequencing,0.6,10,5,7,together|partners|pairs|groups|bossy|alone
+7,The Cat That Kept Trying,perseverance,loops,1.0,15,5,7,frustrated|giving-up|stuck|quitting|crying|impatient
+8,Our Dance Loop,teamwork,loops,0.8,10,5,7,together|partners|pairs|groups|bossy|alone
+9,Thank-You on Repeat,gratitude,loops,0.6,5,5,7,thank|ungrateful|grateful|entitled|taken-for-granted
+10,What Will It Do?,curiosity,events,1.0,5,5,7,bored|curious|wondering|questions|exploring
+11,Tap to Help,service,events,0.8,15,5,7,selfish|helpers|community|useful|for-others
+12,Bump Then Be Kind,compassion,events,0.8,15,6,7,unkind|sad|upset|teasing|laughing-at|hurt
+13,If Someone Has Not Had a Turn,justice,conditionals,1.0,10,5,7,unfair|sharing|turns|arguing|left-out|fighting
+14,If a Friend Is Sad Then...,compassion,conditionals,0.8,10,5,7,unkind|sad|upset|teasing|laughing-at|hurt
+15,If I Made a Mistake Then I Say So,honesty,conditionals,0.6,5,6,7,lying|lie|copying|cheating|blaming|pretending
+16,What If I Change the Number?,curiosity,variables,1.0,10,5,7,bored|curious|wondering|questions|exploring
+17,The Turn Counter,justice,variables,0.8,5,5,7,unfair|sharing|turns|arguing|left-out|fighting
+18,Keep the Real Score,honesty,variables,0.6,5,5,7,lying|lie|copying|cheating|blaming|pretending
+19,Bug Hunt Try Again,perseverance,debugging,1.0,10,5,7,frustrated|giving-up|stuck|quitting|crying|impatient
+20,I Found My Bug,honesty,debugging,0.8,5,5,7,lying|lie|copying|cheating|blaming|pretending
+21,Kind Bug Buddies,compassion,debugging,0.6,5,5,7,unkind|sad|upset|teasing|laughing-at|hurt
+22,Say What Really Happened,honesty,testing,1.0,10,5,7,lying|lie|copying|cheating|blaming|pretending
+23,Predict Run Change,curiosity,testing,0.8,10,5,7,bored|curious|wondering|questions|exploring
+24,Test It Again,perseverance,testing,0.6,5,5,7,frustrated|giving-up|stuck|quitting|crying|impatient
+25,One Small Part at a Time,perseverance,decomposition,1.0,10,5,7,frustrated|giving-up|stuck|quitting|crying|impatient
+26,Split the Job,teamwork,decomposition,0.8,15,6,7,together|partners|pairs|groups|bossy|alone
+27,Many Parts Many Helpers,gratitude,decomposition,0.6,10,5,7,thank|ungrateful|grateful|entitled|taken-for-granted
+28,Pattern Detectives,curiosity,patterns,1.0,10,5,7,bored|curious|wondering|questions|exploring
+29,Does the Rule Fit Everyone?,justice,patterns,0.8,15,5,7,unfair|sharing|turns|arguing|left-out|fighting
+30,Say What You See,honesty,patterns,0.6,5,5,7,lying|lie|copying|cheating|blaming|pretending
+31,Driver and Navigator,teamwork,pair programming,1.0,15,5,7,together|partners|pairs|groups|bossy|alone
+32,Fair Shares of the Tablet,justice,pair programming,0.8,5,5,7,unfair|sharing|turns|arguing|left-out|fighting
+33,Helper Hands,service,pair programming,0.8,10,5,7,selfish|helpers|community|useful|for-others
+34,Thank-You Credits,gratitude,sharing a project,1.0,10,5,7,thank|ungrateful|grateful|entitled|taken-for-granted
+35,One Kind True Thing,compassion,sharing a project,0.8,10,5,7,unkind|sad|upset|teasing|laughing-at|hurt
+36,A Project for Someone,service,sharing a project,0.8,20,5,7,selfish|helpers|community|useful|for-others
