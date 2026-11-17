@@ -46,5 +46,7 @@ I built this with Claude Code in VS Code. I set the direction and made the produ
 <!-- specialization:start -->
 ## Specialization: baseline vs few-shot examples
 
-The explainer's prompt includes two few-shot examples that set a warm, plain tone, and they can be switched off. **The measured comparison has not been run yet**, because it needs a real model. Run `python3 -m src.compare_specialization` with an API key and this section is replaced with the results (guardrail pass rate, sentences per virtue, words per sentence, how often the activity is named, and how often the teacher's note is used).
+The explainer's prompt includes two few-shot examples that set a warm, plain tone, and they can be switched off. I built a script that measures what they change (`src/compare_specialization.py`). It explains the same picks with and without the examples and scores both on the guardrail pass rate, sentences per virtue, words per sentence, how often the activity is named, and how often the teacher's note is used. I tested the script with a scripted model.
+
+**I have not run it against a real model because I did not have API credit, so there are no measured results yet.** With credit, run `python3 -m src.compare_specialization` and this section is replaced with the results table.
 <!-- specialization:end -->

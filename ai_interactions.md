@@ -249,5 +249,7 @@ Things to look at by hand:
 <!-- agent-traces:start -->
 ## Project 4: agent workflow traces
 
-Agent mode lets the model choose the three virtues by calling tools (`get_topic_fits`, `search_class_notes`, `get_activity`, `submit_recommendation`), with a stated reason on every call. The code is in `src/agent.py`. **The saved traces have not been generated yet**, because they need a real model. Run `python3 -m src.agent_demo` with an API key and this section is replaced with the real traces, also saved in full as JSON in `assets/agent_traces/`.
+Agent mode lets the model choose the three virtues by calling tools (`get_topic_fits`, `search_class_notes`, `get_activity`, `submit_recommendation`), with a stated reason on every call. The code is in `src/agent.py`, and 18 tests exercise the whole loop with a scripted model, including bad submissions, too many steps and the fallback to the scorer.
+
+**I have not run it against a real model because I did not have API credit, so there are no saved traces yet.** With credit, run `python3 -m src.agent_demo` and this section is replaced with the real traces, also saved in full as JSON in `assets/agent_traces/`.
 <!-- agent-traces:end -->

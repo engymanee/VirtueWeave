@@ -1,0 +1,26 @@
+$ python3 -m src.evaluate
+ 1. PASS  [ordinary] loops, grade 1, gives up
+      virtues: perseverance, teamwork, gratitude
+ 2. PASS  [ordinary] pair programming, grade 7, arguments
+      virtues: justice, teamwork, service
+ 3. PASS  [ordinary] conditionals, grade 2, teasing
+      virtues: compassion, justice, curiosity
+ 4. PASS  [ordinary] sharing a project, grade 4, no thanks
+      virtues: gratitude, service, compassion
+ 5. PASS  [ordinary] debugging, grade 5, blaming
+      virtues: honesty, teamwork, perseverance
+ 6. PASS  [vague] vague: handful
+ 7. PASS  [vague] vague: nothing special
+ 8. PASS  [guardrail] guard: unknown topic
+ 9. PASS  [guardrail] guard: grade 13
+10. PASS  [guardrail] guard: zero minutes
+11. PASS  [guardrail] guard: injection in note
+12. PASS  [guardrail] guard: bad model wording
+
+mode                         offline
+repeats                      2
+cases passed                 12/12
+expected virtue first        5/5
+expected virtue in top3      5/5
+constraint violations        0
+same result on repeat runs   12/12
